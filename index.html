@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบบันทึกเวลาทำงาน</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --deep: #0d0a1a;
@@ -22,9 +23,7 @@
     --muted: #9585c8;
     --sub: #6b5fa8;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'Sarabun', sans-serif;
     background: var(--deep);
@@ -35,164 +34,107 @@
       radial-gradient(ellipse 60% 40% at 90% 110%, rgba(157,92,246,0.15) 0%, transparent 60%);
   }
 
-  /* ─── HEADER ─── */
+  /* HEADER */
   header {
     background: rgba(22,17,43,0.9);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
     padding: 0 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     height: 64px;
     position: sticky; top: 0; z-index: 100;
   }
   .logo {
     font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
+    font-size: 1.3rem; font-weight: 700;
     background: linear-gradient(135deg, var(--purple2), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     letter-spacing: 0.04em;
   }
   .logo span { font-weight: 400; opacity: 0.7; font-size: 0.85rem; }
   .badge {
     background: linear-gradient(135deg, var(--purple1), var(--accent));
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 99px;
-    letter-spacing: 0.06em;
+    color: #fff; font-size: 0.72rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 99px; letter-spacing: 0.06em;
   }
 
-  /* ─── LAYOUT ─── */
+  /* LAYOUT */
   .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
-
   .tabs {
     display: flex; gap: 4px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 6px;
-    margin-bottom: 28px;
-    width: fit-content;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 6px; margin-bottom: 28px; width: fit-content;
   }
   .tab-btn {
-    padding: 10px 24px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 500;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all .2s;
+    padding: 10px 24px; border: none; background: transparent;
+    color: var(--muted); font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem; font-weight: 500; border-radius: 10px; cursor: pointer; transition: all .2s;
   }
   .tab-btn.active {
     background: linear-gradient(135deg, var(--purple1), var(--purple2));
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.4);
   }
   .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.06); }
-
   .page { display: none; }
   .page.active { display: block; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-  /* ─── CARD ─── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 28px;
-    margin-bottom: 20px;
-  }
+  /* CARD */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; margin-bottom: 20px; }
   .card-title {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--purple3);
-    margin-bottom: 20px;
-    display: flex; align-items: center; gap: 10px;
+    font-family: 'Chakra Petch', sans-serif; font-size: 1.05rem; font-weight: 600;
+    color: var(--purple3); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
   }
   .card-title::before { content: ''; display: block; width: 4px; height: 18px; background: linear-gradient(var(--purple1), var(--accent)); border-radius: 2px; }
 
-  /* ─── FORM ─── */
+  /* FORM */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-group { display: flex; flex-direction: column; gap: 7px; }
   .form-group.full { grid-column: 1/-1; }
   label { font-size: 0.85rem; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
   input, select {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 11px 14px;
-    color: var(--text);
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
-    width: 100%;
+    background: var(--card2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 14px; color: var(--text); font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem; outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
   }
-  input:focus, select:focus {
-    border-color: var(--purple2);
-    box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
-  }
+  input:focus, select:focus { border-color: var(--purple2); box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
   input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(3) hue-rotate(220deg); }
   .time-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
   .time-sep { color: var(--muted); font-size: 1.1rem; text-align: center; }
 
   .btn {
-    padding: 12px 28px;
-    border: none;
-    border-radius: 10px;
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .2s;
-    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; border: none; border-radius: 10px;
+    font-family: 'Sarabun', sans-serif; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 8px;
   }
   .btn-primary {
     background: linear-gradient(135deg, var(--purple1), var(--purple2));
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(124,58,237,0.35);
+    color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.35);
   }
   .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,58,237,0.5); }
-  .btn-secondary {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-  }
+  .btn-secondary { background: var(--card2); border: 1px solid var(--border); color: var(--muted); }
   .btn-secondary:hover { border-color: var(--purple2); color: var(--text); }
   .btn-danger { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
   .btn-danger:hover { background: rgba(248,113,113,0.25); }
-  .form-actions { margin-top: 20px; display: flex; gap: 10px; }
+  .btn-edit { background: rgba(157,92,246,0.15); border: 1px solid rgba(157,92,246,0.3); color: var(--purple3); }
+  .btn-edit:hover { background: rgba(157,92,246,0.28); }
+  .form-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
 
-  /* ─── STATS GRID ─── */
+  /* STATS */
   .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
   .stat-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
   }
   .stat-box::after {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--purple1), var(--accent));
-    border-radius: 14px 14px 0 0;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--purple1), var(--accent)); border-radius: 14px 14px 0 0;
   }
   .stat-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
   .stat-value { font-family: 'Chakra Petch', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text); }
   .stat-sub { font-size: 0.78rem; color: var(--sub); margin-top: 4px; }
 
-  /* ─── TABLE ─── */
+  /* TABLE */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
   thead tr { border-bottom: 2px solid var(--border); }
@@ -201,18 +143,10 @@
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(124,58,237,0.06); }
 
-  .chip {
-    display: inline-flex; align-items: center;
-    padding: 3px 10px;
-    border-radius: 99px;
-    font-size: 0.78rem;
-    font-weight: 600;
-  }
+  .chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 600; }
   .chip-ot { background: rgba(251,191,36,0.15); color: var(--gold); border: 1px solid rgba(251,191,36,0.3); }
   .chip-normal { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
-  .chip-holiday { background: rgba(232,121,249,0.15); color: var(--accent); border: 1px solid rgba(232,121,249,0.3); }
   .chip-weekend { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
-
   .emp-name { font-weight: 600; color: var(--purple3); }
   .money { font-family: 'Chakra Petch', sans-serif; font-weight: 600; }
   .money-total { color: var(--gold); }
@@ -220,108 +154,134 @@
   .money-ot { color: var(--accent); }
 
   .btn-view {
-    padding: 6px 14px;
-    border: 1px solid var(--purple1);
-    background: rgba(124,58,237,0.1);
-    color: var(--purple3);
-    border-radius: 8px;
-    font-family: 'Sarabun', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .2s;
+    padding: 6px 14px; border: 1px solid var(--purple1);
+    background: rgba(124,58,237,0.1); color: var(--purple3);
+    border-radius: 8px; font-family: 'Sarabun', sans-serif;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all .2s;
   }
   .btn-view:hover { background: rgba(124,58,237,0.25); color: #fff; }
 
-  /* ─── MODAL ─── */
+  /* ACTION BUTTONS IN ROW */
+  .row-actions { display: flex; gap: 6px; }
+  .row-actions .btn { padding: 5px 10px; font-size: 0.78rem; }
+
+  /* MODAL */
   .modal-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(6px);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    z-index: 1000; align-items: center; justify-content: center;
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    max-width: 820px;
-    width: 95%;
-    max-height: 85vh;
-    overflow-y: auto;
-    position: relative;
-    animation: modalIn .25s ease;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px;
+    max-width: 820px; width: 95%; max-height: 85vh;
+    overflow-y: auto; position: relative; animation: modalIn .25s ease;
   }
   @keyframes modalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
   .modal-close {
     position: absolute; top: 16px; right: 16px;
-    background: rgba(255,255,255,0.08);
-    border: none;
-    color: var(--muted);
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .2s;
+    background: rgba(255,255,255,0.08); border: none; color: var(--muted);
+    width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+    font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all .2s;
   }
   .modal-close:hover { background: rgba(248,113,113,0.2); color: var(--red); }
   .modal-emp-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
   .emp-avatar {
     width: 52px; height: 52px;
     background: linear-gradient(135deg, var(--purple1), var(--accent));
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #fff;
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Chakra Petch', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fff;
   }
   .modal-emp-name { font-size: 1.2rem; font-weight: 700; color: var(--text); }
   .modal-emp-sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
   .modal-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
-  .mini-stat {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    text-align: center;
-  }
+  .mini-stat { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
   .mini-stat .v { font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; font-weight: 700; }
   .mini-stat .l { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 
-  /* ─── TOAST ─── */
+  /* EDIT MODAL */
+  .edit-modal {
+    max-width: 500px;
+  }
+  .edit-modal .form-grid { grid-template-columns: 1fr; }
+  .edit-modal-title {
+    font-family: 'Chakra Petch', sans-serif; font-size: 1rem; font-weight: 600;
+    color: var(--purple3); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+
+  /* PIN LOCK */
+  .pin-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+    z-index: 2000; align-items: center; justify-content: center;
+  }
+  .pin-overlay.open { display: flex; }
+  .pin-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 24px; padding: 40px 36px; max-width: 380px; width: 95%;
+    text-align: center; animation: modalIn .3s ease;
+  }
+  .pin-icon {
+    width: 64px; height: 64px; margin: 0 auto 20px;
+    background: linear-gradient(135deg, var(--purple1), var(--accent));
+    border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+  }
+  .pin-title { font-family: 'Chakra Petch', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+  .pin-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 28px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+  .pin-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--border); background: transparent; transition: all .2s;
+  }
+  .pin-dot.filled { background: var(--purple2); border-color: var(--purple2); box-shadow: 0 0 8px rgba(157,92,246,0.6); }
+  .pin-dot.error { background: var(--red); border-color: var(--red); }
+  .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 240px; margin: 0 auto; }
+  .pin-key {
+    aspect-ratio: 1; border: 1px solid var(--border); background: var(--card2);
+    color: var(--text); font-family: 'Chakra Petch', sans-serif; font-size: 1.2rem; font-weight: 600;
+    border-radius: 12px; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center;
+  }
+  .pin-key:hover { background: rgba(124,58,237,0.2); border-color: var(--purple2); }
+  .pin-key:active { transform: scale(0.93); }
+  .pin-key.del { color: var(--red); font-size: 1rem; }
+  .pin-key.zero { grid-column: 2; }
+  .pin-error { color: var(--red); font-size: 0.85rem; margin-top: 16px; min-height: 20px; }
+
+  /* CHANGE PIN SECTION */
+  .change-pin-section {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-top: 16px;
+  }
+  .change-pin-title { font-size: 0.9rem; font-weight: 600; color: var(--purple3); margin-bottom: 14px; }
+  .change-pin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .change-pin-input {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; color: var(--text); font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem; outline: none; width: 100%; letter-spacing: 0.2em;
+  }
+  .change-pin-input:focus { border-color: var(--purple2); box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
+
+  /* TOAST */
   #toast {
     position: fixed; bottom: 28px; right: 28px;
-    background: var(--card);
-    border: 1px solid var(--green);
-    border-radius: 12px;
-    padding: 14px 22px;
-    color: var(--green);
-    font-weight: 600;
-    font-size: 0.9rem;
-    z-index: 9999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all .3s ease;
+    background: var(--card); border: 1px solid var(--green);
+    border-radius: 12px; padding: 14px 22px; color: var(--green);
+    font-weight: 600; font-size: 0.9rem; z-index: 9999;
+    transform: translateY(80px); opacity: 0; transition: all .3s ease;
     display: flex; align-items: center; gap: 8px;
   }
   #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error { border-color: var(--red); color: var(--red); }
 
-  /* ─── EMPTY ─── */
-  .empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--sub);
-  }
+  /* EMPTY */
+  .empty { text-align: center; padding: 60px 20px; color: var(--sub); }
   .empty svg { opacity: 0.3; margin-bottom: 12px; }
   .empty p { font-size: 0.95rem; }
 
-  /* ─── SCROLLBAR ─── */
+  .btn-export { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.35); color: var(--green); }
+  .btn-export:hover { background: rgba(52,211,153,0.28); }
+
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--deep); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -331,6 +291,7 @@
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: 1; }
     .modal-stats { grid-template-columns: 1fr 1fr; }
+    .change-pin-grid { grid-template-columns: 1fr; }
   }
   @media(max-width:480px){
     .stats-grid { grid-template-columns: 1fr; }
@@ -342,9 +303,7 @@
 <body>
 
 <header>
-  <div>
-    <div class="logo">TimeTrack <span>| ระบบบันทึกเวลาทำงาน</span></div>
-  </div>
+  <div><div class="logo">TimeTrack <span>| ระบบบันทึกเวลาทำงาน</span></div></div>
   <div class="badge">HR SYSTEM</div>
 </header>
 
@@ -354,10 +313,10 @@
     <button class="tab-btn" onclick="switchTab('summary')">📊 สรุปรายงาน</button>
   </div>
 
-  <!-- ─── PAGE: ENTRY ─── -->
+  <!-- PAGE: ENTRY -->
   <div id="page-entry" class="page active">
     <div class="card">
-      <div class="card-title">กรอกข้อมูลเวลาทำงาน</div>
+      <div class="card-title" id="form-title">กรอกข้อมูลเวลาทำงาน</div>
       <div class="form-grid">
         <div class="form-group full">
           <label>ชื่อ-สกุล พนักงาน</label>
@@ -372,7 +331,7 @@
           <input type="number" id="inp-wage" placeholder="เช่น 500" min="0">
         </div>
         <div class="form-group full">
-          <label>เวลาทำงาน</label>
+          <label>เวลาทำงาน <small style="color:var(--sub)">(เวลาพักกลางวัน 12:00–13:00 จะไม่นับ)</small></label>
           <div class="time-row">
             <input type="time" id="inp-start" value="08:00">
             <div class="time-sep">—</div>
@@ -381,7 +340,8 @@
         </div>
       </div>
       <div class="form-actions">
-        <button class="btn btn-primary" onclick="addEntry()">✚ บันทึกเวลาทำงาน</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">✚ บันทึกเวลาทำงาน</button>
+        <button class="btn btn-secondary" id="cancel-btn" onclick="cancelEdit()" style="display:none">✕ ยกเลิก</button>
         <button class="btn btn-secondary" onclick="clearForm()">ล้างข้อมูล</button>
       </div>
     </div>
@@ -392,15 +352,8 @@
         <table id="recent-table">
           <thead>
             <tr>
-              <th>ชื่อ-สกุล</th>
-              <th>วันที่</th>
-              <th>เวลาเข้า</th>
-              <th>เวลาออก</th>
-              <th>ชม.ปกติ</th>
-              <th>ชม.OT</th>
-              <th>ประเภท</th>
-              <th>ค่าแรง</th>
-              <th></th>
+              <th>ชื่อ-สกุล</th><th>วันที่</th><th>เวลาเข้า</th><th>เวลาออก</th>
+              <th>ชม.ปกติ</th><th>ชม.OT</th><th>ประเภท</th><th>ค่าแรง</th><th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="recent-tbody"></tbody>
@@ -413,45 +366,29 @@
     </div>
   </div>
 
-  <!-- ─── PAGE: SUMMARY ─── -->
+  <!-- PAGE: SUMMARY (locked) -->
   <div id="page-summary" class="page">
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">พนักงานทั้งหมด</div>
-        <div class="stat-value" id="s-emp">0</div>
-        <div class="stat-sub">คน</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">รายการทั้งหมด</div>
-        <div class="stat-value" id="s-records">0</div>
-        <div class="stat-sub">รายการ</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">ชม.ทำงานรวม</div>
-        <div class="stat-value" id="s-hours">0</div>
-        <div class="stat-sub">ชั่วโมง</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">ค่าแรงรวมทั้งหมด</div>
-        <div class="stat-value money-total" id="s-total">฿0</div>
-        <div class="stat-sub">บาท</div>
-      </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-label">พนักงานทั้งหมด</div><div class="stat-value" id="s-emp">0</div><div class="stat-sub">คน</div></div>
+      <div class="stat-box"><div class="stat-label">รายการทั้งหมด</div><div class="stat-value" id="s-records">0</div><div class="stat-sub">รายการ</div></div>
+      <div class="stat-box"><div class="stat-label">ชม.ทำงานรวม</div><div class="stat-value" id="s-hours">0</div><div class="stat-sub">ชั่วโมง</div></div>
+      <div class="stat-box"><div class="stat-label">ค่าแรงรวมทั้งหมด</div><div class="stat-value money-total" id="s-total">฿0</div><div class="stat-sub">บาท</div></div>
     </div>
 
     <div class="card">
-      <div class="card-title">สรุปค่าแรงพนักงานรายบุคคล</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div class="card-title" style="margin-bottom:0">สรุปค่าแรงพนักงานรายบุคคล</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-export" style="font-size:0.82rem;padding:8px 16px" onclick="exportExcel()">📥 Export Excel</button>
+          <button class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px" onclick="openChangePinModal()">🔐 เปลี่ยนรหัสผ่าน</button>
+        </div>
+      </div>
       <div class="table-wrap">
-        <table id="summary-table">
+        <table>
           <thead>
             <tr>
-              <th>ชื่อ-สกุล</th>
-              <th>วันทำงาน</th>
-              <th>ชม.ปกติ (×1)</th>
-              <th>ชม.OT (×1.5)</th>
-              <th>ค่าแรงปกติ</th>
-              <th>ค่า OT</th>
-              <th>รวม</th>
-              <th>รายละเอียด</th>
+              <th>ชื่อ-สกุล</th><th>วันทำงาน</th><th>ชม.ปกติ (×1)</th><th>ชม.OT (×1.5)</th>
+              <th>ค่าแรงปกติ</th><th>ค่า OT</th><th>รวม</th><th>รายละเอียด</th>
             </tr>
           </thead>
           <tbody id="summary-tbody"></tbody>
@@ -465,47 +402,112 @@
   </div>
 </div>
 
-<!-- ─── MODAL ─── -->
+<!-- MODAL: Employee Detail -->
 <div class="modal-overlay" id="emp-modal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()">✕</button>
+    <button class="modal-close" onclick="closeModal('emp-modal')">✕</button>
     <div class="modal-emp-header">
       <div class="emp-avatar" id="modal-avatar"></div>
-      <div>
-        <div class="modal-emp-name" id="modal-name"></div>
-        <div class="modal-emp-sub" id="modal-sub"></div>
-      </div>
+      <div><div class="modal-emp-name" id="modal-name"></div><div class="modal-emp-sub" id="modal-sub"></div></div>
     </div>
     <div class="modal-stats">
-      <div class="mini-stat">
-        <div class="v money-normal" id="modal-normal-h">0</div>
-        <div class="l">ชั่วโมงปกติ</div>
-      </div>
-      <div class="mini-stat">
-        <div class="v money-ot" id="modal-ot-h">0</div>
-        <div class="l">ชั่วโมง OT</div>
-      </div>
-      <div class="mini-stat">
-        <div class="v money-total" id="modal-total-pay">฿0</div>
-        <div class="l">ค่าแรงรวม</div>
-      </div>
+      <div class="mini-stat"><div class="v money-normal" id="modal-normal-h">0</div><div class="l">ชั่วโมงปกติ</div></div>
+      <div class="mini-stat"><div class="v money-ot" id="modal-ot-h">0</div><div class="l">ชั่วโมง OT</div></div>
+      <div class="mini-stat"><div class="v money-total" id="modal-total-pay">฿0</div><div class="l">ค่าแรงรวม</div></div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>วันที่</th>
-            <th>วัน</th>
-            <th>เวลาเข้า</th>
-            <th>เวลาออก</th>
-            <th>ชม.ปกติ</th>
-            <th>ชม.OT</th>
-            <th>ประเภท</th>
-            <th>ค่าแรง</th>
-          </tr>
-        </thead>
+        <thead><tr><th>วันที่</th><th>วัน</th><th>เวลาเข้า</th><th>เวลาออก</th><th>ชม.ปกติ</th><th>ชม.OT</th><th>ประเภท</th><th>ค่าแรง</th></tr></thead>
         <tbody id="modal-tbody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Entry -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal edit-modal">
+    <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
+    <div class="edit-modal-title">✏️ แก้ไขรายการทำงาน</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>ชื่อ-สกุล พนักงาน</label>
+        <input type="text" id="edit-name" placeholder="ชื่อ-สกุล">
+      </div>
+      <div class="form-group">
+        <label>วันที่ทำงาน</label>
+        <input type="date" id="edit-date">
+      </div>
+      <div class="form-group">
+        <label>ค่าแรงต่อวัน (บาท)</label>
+        <input type="number" id="edit-wage" min="0">
+      </div>
+      <div class="form-group">
+        <label>เวลาเข้า</label>
+        <input type="time" id="edit-start">
+      </div>
+      <div class="form-group">
+        <label>เวลาออก</label>
+        <input type="time" id="edit-end">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="confirmEdit()">💾 บันทึกการแก้ไข</button>
+      <button class="btn btn-secondary" onclick="closeModal('edit-modal')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN LOCK OVERLAY -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <div class="pin-icon">🔒</div>
+    <div class="pin-title">หน้าสรุปรายงาน</div>
+    <div class="pin-sub">กรุณาใส่รหัสผ่าน 4 หลัก เพื่อเข้าถึงข้อมูล</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinInput('1')">1</button>
+      <button class="pin-key" onclick="pinInput('2')">2</button>
+      <button class="pin-key" onclick="pinInput('3')">3</button>
+      <button class="pin-key" onclick="pinInput('4')">4</button>
+      <button class="pin-key" onclick="pinInput('5')">5</button>
+      <button class="pin-key" onclick="pinInput('6')">6</button>
+      <button class="pin-key" onclick="pinInput('7')">7</button>
+      <button class="pin-key" onclick="pinInput('8')">8</button>
+      <button class="pin-key" onclick="pinInput('9')">9</button>
+      <button class="pin-key zero" onclick="pinInput('0')">0</button>
+      <button class="pin-key del" onclick="pinDelete()">⌫</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+</div>
+
+<!-- CHANGE PIN MODAL -->
+<div class="modal-overlay" id="change-pin-modal">
+  <div class="modal edit-modal">
+    <button class="modal-close" onclick="closeModal('change-pin-modal')">✕</button>
+    <div class="edit-modal-title">🔐 เปลี่ยนรหัสผ่าน</div>
+    <div class="change-pin-section">
+      <div class="change-pin-title">กรอกรหัสผ่านใหม่</div>
+      <div class="change-pin-grid">
+        <div class="form-group">
+          <label>รหัสผ่านใหม่ (4 หลัก)</label>
+          <input class="change-pin-input" type="password" id="new-pin" maxlength="4" inputmode="numeric" placeholder="••••">
+        </div>
+        <div class="form-group">
+          <label>ยืนยันรหัสผ่านใหม่</label>
+          <input class="change-pin-input" type="password" id="confirm-pin" maxlength="4" inputmode="numeric" placeholder="••••">
+        </div>
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewPin()">💾 บันทึกรหัสผ่านใหม่</button>
+      <button class="btn btn-secondary" onclick="closeModal('change-pin-modal')">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -515,40 +517,55 @@
 <script>
 const DAYS_TH = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 let entries = JSON.parse(localStorage.getItem('tt_entries') || '[]');
+let editingIndex = null;
+
+// ─── PIN ───
+const DEFAULT_PIN = '5210';
+function getPin() { return localStorage.getItem('tt_pin') || DEFAULT_PIN; }
+let pinBuffer = '';
+let summaryUnlocked = false;
 
 function save() { localStorage.setItem('tt_entries', JSON.stringify(entries)); }
-
 function fmt(n) { return n.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtH(h) { return h.toFixed(2); }
 
-// ─── CALCULATE WAGES ───
+// ─── CALCULATE WAGES (with lunch break 12:00-13:00 excluded) ───
 function calcEntry(entry) {
   const [sh, sm] = entry.start.split(':').map(Number);
   const [eh, em] = entry.end.split(':').map(Number);
   const startMin = sh * 60 + sm;
   const endMin   = eh * 60 + em;
-  const totalMin = Math.max(0, endMin - startMin);
 
-  const dateObj = new Date(entry.date + 'T00:00:00');
-  const dow = dateObj.getDay(); // 0=Sun, 6=Sat
+  const dateObj  = new Date(entry.date + 'T00:00:00');
+  const dow      = dateObj.getDay();
   const isWeekend = dow === 0 || dow === 6;
 
-  const workStart = 8 * 60;   // 08:00
-  const workEnd   = 17 * 60;  // 17:00
+  const workStart  = 8  * 60;  // 08:00
+  const workEnd    = 17 * 60;  // 17:00
+  const lunchStart = 12 * 60;  // 12:00
+  const lunchEnd   = 13 * 60;  // 13:00
+
+  // Helper: minutes of overlap between [a,b) and [c,d)
+  function overlap(a, b, c, d) { return Math.max(0, Math.min(b,d) - Math.max(a,c)); }
+
+  // Remove lunch break from any interval
+  function deductLunch(from, to) {
+    return Math.max(0, (to - from) - overlap(from, to, lunchStart, lunchEnd));
+  }
 
   let normalHours = 0, otHours = 0;
 
   if (isWeekend) {
-    // All hours on weekend = OT 1.5×
-    otHours = totalMin / 60;
+    // Weekend: all time = OT 1.5×, but still deduct lunch
+    otHours = deductLunch(startMin, endMin) / 60;
   } else {
-    // Normal hours: overlap with 08:00–17:00
-    const overlapStart = Math.max(startMin, workStart);
-    const overlapEnd   = Math.min(endMin, workEnd);
-    const normalMin = Math.max(0, overlapEnd - overlapStart);
-    normalHours = normalMin / 60;
-
-    // OT hours: after 17:00
+    // Normal time: overlap with 08:00–17:00 minus lunch
+    const nFrom = Math.max(startMin, workStart);
+    const nTo   = Math.min(endMin, workEnd);
+    if (nTo > nFrom) {
+      normalHours = deductLunch(nFrom, nTo) / 60;
+    }
+    // OT: time after 17:00 (lunch cannot fall after 17:00 so no deduction needed)
     if (endMin > workEnd) {
       otHours = (endMin - Math.max(startMin, workEnd)) / 60;
     }
@@ -562,14 +579,14 @@ function calcEntry(entry) {
   return { normalHours, otHours, normalPay, otPay, totalPay, isWeekend, dow };
 }
 
-// ─── RENDER RECENT TABLE ───
+// ─── RENDER RECENT ───
 function renderRecent() {
   const tbody = document.getElementById('recent-tbody');
   const empty = document.getElementById('recent-empty');
   if (!entries.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
 
-  tbody.innerHTML = entries.slice().reverse().slice(0, 30).map((e, ri) => {
+  tbody.innerHTML = entries.slice().reverse().slice(0, 50).map((e, ri) => {
     const i = entries.length - 1 - ri;
     const c = calcEntry(e);
     const typeChip = c.isWeekend
@@ -586,7 +603,12 @@ function renderRecent() {
       <td class="money money-ot">${fmtH(c.otHours)}</td>
       <td>${typeChip}</td>
       <td class="money money-total">฿${fmt(c.totalPay)}</td>
-      <td><button class="btn-danger btn" style="padding:5px 10px;font-size:0.78rem" onclick="deleteEntry(${i})">ลบ</button></td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-edit" onclick="openEditModal(${i})">✏️ แก้ไข</button>
+          <button class="btn btn-danger" onclick="deleteEntry(${i})">🗑 ลบ</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -595,41 +617,29 @@ function renderRecent() {
 function renderSummary() {
   const tbody = document.getElementById('summary-tbody');
   const empty = document.getElementById('summary-empty');
-
-  // Group by name
   const map = {};
   entries.forEach(e => {
     if (!map[e.name]) map[e.name] = { wage: e.wage, records: [] };
     map[e.name].records.push(e);
-    map[e.name].wage = e.wage; // use latest
+    map[e.name].wage = e.wage;
   });
-
   const names = Object.keys(map);
   document.getElementById('s-emp').textContent = names.length;
   document.getElementById('s-records').textContent = entries.length;
-
   let totalHours = 0, grandTotal = 0;
-
   if (!names.length) {
-    tbody.innerHTML = '';
-    empty.style.display = '';
+    tbody.innerHTML = ''; empty.style.display = '';
     document.getElementById('s-hours').textContent = '0';
     document.getElementById('s-total').textContent = '฿0';
     return;
   }
   empty.style.display = 'none';
-
   tbody.innerHTML = names.map(name => {
     const g = map[name];
-    let nh = 0, oh = 0, np = 0, op = 0;
-    g.records.forEach(e => {
-      const c = calcEntry(e);
-      nh += c.normalHours; oh += c.otHours;
-      np += c.normalPay;   op += c.otPay;
-    });
+    let nh=0, oh=0, np=0, op=0;
+    g.records.forEach(e => { const c=calcEntry(e); nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay; });
     const total = np + op;
-    totalHours += nh + oh;
-    grandTotal += total;
+    totalHours += nh + oh; grandTotal += total;
     return `<tr>
       <td class="emp-name">${name}</td>
       <td>${g.records.length} วัน</td>
@@ -641,105 +651,301 @@ function renderSummary() {
       <td><button class="btn-view" onclick="openModal('${name.replace(/'/g,"\\'")}')">ดูรายละเอียด ▸</button></td>
     </tr>`;
   }).join('');
-
   document.getElementById('s-hours').textContent = fmtH(totalHours);
   document.getElementById('s-total').textContent = '฿' + fmt(grandTotal);
 }
 
-// ─── MODAL ───
+// ─── EMPLOYEE DETAIL MODAL ───
 function openModal(name) {
   const records = entries.filter(e => e.name === name);
   document.getElementById('modal-name').textContent = name;
   document.getElementById('modal-avatar').textContent = name.charAt(0).toUpperCase();
   document.getElementById('modal-sub').textContent = `${records.length} รายการทำงาน`;
-
   let nh=0, oh=0, np=0, op=0;
-  const rows = records.slice().sort((a,b) => a.date.localeCompare(b.date)).map(e => {
+  const rows = records.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e => {
     const c = calcEntry(e);
-    nh += c.normalHours; oh += c.otHours;
-    np += c.normalPay;   op += c.otPay;
+    nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay;
     const typeChip = c.isWeekend
       ? '<span class="chip chip-weekend">วันหยุด ×1.5</span>'
-      : c.otHours > 0
-        ? '<span class="chip chip-ot">มี OT</span>'
-        : '<span class="chip chip-normal">ปกติ</span>';
+      : c.otHours > 0 ? '<span class="chip chip-ot">มี OT</span>' : '<span class="chip chip-normal">ปกติ</span>';
     return `<tr>
-      <td>${e.date}</td>
-      <td>${DAYS_TH[c.dow]}</td>
-      <td>${e.start}</td>
-      <td>${e.end}</td>
+      <td>${e.date}</td><td>${DAYS_TH[c.dow]}</td>
+      <td>${e.start}</td><td>${e.end}</td>
       <td class="money money-normal">${fmtH(c.normalHours)}</td>
       <td class="money money-ot">${fmtH(c.otHours)}</td>
       <td>${typeChip}</td>
       <td class="money money-total">฿${fmt(c.totalPay)}</td>
     </tr>`;
   });
-
   document.getElementById('modal-normal-h').textContent = fmtH(nh) + ' ชม.';
   document.getElementById('modal-ot-h').textContent = fmtH(oh) + ' ชม.';
-  document.getElementById('modal-total-pay').textContent = '฿' + fmt(np + op);
+  document.getElementById('modal-total-pay').textContent = '฿' + fmt(np+op);
   document.getElementById('modal-tbody').innerHTML = rows.join('');
   document.getElementById('emp-modal').classList.add('open');
 }
-function closeModal() { document.getElementById('emp-modal').classList.remove('open'); }
-document.getElementById('emp-modal').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
 
-// ─── ADD ENTRY ───
-function addEntry() {
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el && el.id!=='pin-overlay') closeModal(el.id); });
+});
+
+// ─── EDIT MODAL ───
+function openEditModal(i) {
+  const e = entries[i];
+  editingIndex = i;
+  document.getElementById('edit-name').value  = e.name;
+  document.getElementById('edit-date').value  = e.date;
+  document.getElementById('edit-start').value = e.start;
+  document.getElementById('edit-end').value   = e.end;
+  document.getElementById('edit-wage').value  = e.wage;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function confirmEdit() {
+  const name  = document.getElementById('edit-name').value.trim();
+  const date  = document.getElementById('edit-date').value;
+  const start = document.getElementById('edit-start').value;
+  const end   = document.getElementById('edit-end').value;
+  const wage  = parseFloat(document.getElementById('edit-wage').value);
+  if (!name)  { showToast('กรุณากรอกชื่อ-สกุล', true); return; }
+  if (!date)  { showToast('กรุณาเลือกวันที่', true); return; }
+  if (start >= end) { showToast('เวลาออกต้องมากกว่าเวลาเข้า', true); return; }
+  if (isNaN(wage)||wage<=0) { showToast('กรุณากรอกค่าแรงต่อวัน', true); return; }
+  entries[editingIndex] = { name, date, start, end, wage };
+  save(); renderRecent(); renderSummary();
+  closeModal('edit-modal');
+  showToast('แก้ไขข้อมูลสำเร็จ');
+}
+
+// ─── ADD / DELETE ───
+function saveEntry() {
   const name  = document.getElementById('inp-name').value.trim();
   const date  = document.getElementById('inp-date').value;
   const start = document.getElementById('inp-start').value;
   const end   = document.getElementById('inp-end').value;
   const wage  = parseFloat(document.getElementById('inp-wage').value);
-
-  if (!name)  { alert('กรุณากรอกชื่อ-สกุล'); return; }
-  if (!date)  { alert('กรุณาเลือกวันที่'); return; }
-  if (!start || !end) { alert('กรุณากรอกเวลา'); return; }
-  if (isNaN(wage) || wage <= 0) { alert('กรุณากรอกค่าแรงต่อวัน'); return; }
-  if (start >= end)  { alert('เวลาออกต้องมากกว่าเวลาเข้า'); return; }
-
+  if (!name)  { showToast('กรุณากรอกชื่อ-สกุล', true); return; }
+  if (!date)  { showToast('กรุณาเลือกวันที่', true); return; }
+  if (!start||!end) { showToast('กรุณากรอกเวลา', true); return; }
+  if (isNaN(wage)||wage<=0) { showToast('กรุณากรอกค่าแรงต่อวัน', true); return; }
+  if (start >= end) { showToast('เวลาออกต้องมากกว่าเวลาเข้า', true); return; }
   entries.push({ name, date, start, end, wage });
-  save();
-  renderRecent();
-  renderSummary();
+  save(); renderRecent(); renderSummary();
   showToast(`บันทึกเวลาทำงานของ ${name} สำเร็จ`);
+  clearForm();
 }
 
 function deleteEntry(i) {
   if (!confirm('ยืนยันการลบรายการนี้?')) return;
   entries.splice(i, 1);
-  save();
-  renderRecent();
-  renderSummary();
+  save(); renderRecent(); renderSummary();
   showToast('ลบรายการแล้ว');
 }
 
 function clearForm() {
   document.getElementById('inp-name').value = '';
-  document.getElementById('inp-date').value = '';
+  document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('inp-start').value = '08:00';
   document.getElementById('inp-end').value = '17:00';
   document.getElementById('inp-wage').value = '';
 }
 
+function cancelEdit() {
+  editingIndex = null;
+  document.getElementById('form-title').textContent = 'กรอกข้อมูลเวลาทำงาน';
+  document.getElementById('save-btn').textContent = '✚ บันทึกเวลาทำงาน';
+  document.getElementById('cancel-btn').style.display = 'none';
+  clearForm();
+}
+
+// ─── TAB SWITCH WITH PIN LOCK ───
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i===0) === (tab==='entry')));
+  if (tab === 'summary' && !summaryUnlocked) {
+    openPinOverlay();
+    return;
+  }
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0)===(tab==='entry')));
   document.getElementById('page-entry').classList.toggle('active', tab==='entry');
   document.getElementById('page-summary').classList.toggle('active', tab==='summary');
 }
 
-function showToast(msg) {
+// ─── PIN LOGIC ───
+function openPinOverlay() {
+  pinBuffer = '';
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-overlay').classList.add('open');
+}
+
+function pinInput(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updateDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(checkPin, 150);
+  }
+}
+
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updateDots();
+}
+
+function updateDots(state) {
+  for (let i=0; i<4; i++) {
+    const d = document.getElementById('dot-'+i);
+    d.classList.toggle('filled', i < pinBuffer.length && state !== 'error');
+    d.classList.toggle('error', state === 'error');
+  }
+}
+
+function checkPin() {
+  if (pinBuffer === getPin()) {
+    summaryUnlocked = true;
+    document.getElementById('pin-overlay').classList.remove('open');
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i===1));
+    document.getElementById('page-entry').classList.remove('active');
+    document.getElementById('page-summary').classList.add('active');
+  } else {
+    updateDots('error');
+    document.getElementById('pin-error').textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
+    setTimeout(() => {
+      pinBuffer = '';
+      updateDots();
+      document.getElementById('pin-error').textContent = '';
+    }, 1200);
+  }
+}
+
+// ─── CHANGE PIN ───
+function openChangePinModal() {
+  document.getElementById('new-pin').value = '';
+  document.getElementById('confirm-pin').value = '';
+  document.getElementById('change-pin-modal').classList.add('open');
+}
+
+function saveNewPin() {
+  const np = document.getElementById('new-pin').value.trim();
+  const cp = document.getElementById('confirm-pin').value.trim();
+  if (!/^\d{4}$/.test(np)) { showToast('รหัสผ่านต้องเป็นตัวเลข 4 หลักเท่านั้น', true); return; }
+  if (np !== cp) { showToast('รหัสผ่านยืนยันไม่ตรงกัน', true); return; }
+  localStorage.setItem('tt_pin', np);
+  closeModal('change-pin-modal');
+  showToast('เปลี่ยนรหัสผ่านสำเร็จ');
+}
+
+// ─── TOAST ───
+function showToast(msg, isErr) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
+  t.style.borderColor = isErr ? 'var(--red)' : 'var(--green)';
+  t.style.color = isErr ? 'var(--red)' : 'var(--green)';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ─── EXPORT EXCEL ───
+function exportExcel() {
+  if (!entries.length) { showToast('ไม่มีข้อมูลสำหรับ Export', true); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: สรุปรายบุคคล ──
+  const map = {};
+  entries.forEach(e => {
+    if (!map[e.name]) map[e.name] = { wage: e.wage, records: [] };
+    map[e.name].records.push(e);
+    map[e.name].wage = e.wage;
+  });
+
+  const summaryRows = [
+    ['ชื่อ-สกุล', 'จำนวนวันทำงาน', 'ชม.ปกติ (×1)', 'ชม.OT (×1.5)', 'ค่าแรงปกติ (บาท)', 'ค่า OT (บาท)', 'รวมค่าแรง (บาท)']
+  ];
+  let totalNH=0, totalOH=0, totalNP=0, totalOP=0;
+  Object.keys(map).forEach(name => {
+    const g = map[name];
+    let nh=0,oh=0,np=0,op=0;
+    g.records.forEach(e => { const c=calcEntry(e); nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay; });
+    summaryRows.push([name, g.records.length, +nh.toFixed(2), +oh.toFixed(2), +np.toFixed(2), +op.toFixed(2), +(np+op).toFixed(2)]);
+    totalNH+=nh; totalOH+=oh; totalNP+=np; totalOP+=op;
+  });
+  summaryRows.push(['รวมทั้งหมด', entries.length, +totalNH.toFixed(2), +totalOH.toFixed(2), +totalNP.toFixed(2), +totalOP.toFixed(2), +(totalNP+totalOP).toFixed(2)]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
+
+  // Column widths sheet1
+  ws1['!cols'] = [28,18,16,16,20,16,20].map(w=>({wch:w}));
+
+  // Style header row (bold via special cell range)
+  const hdrRange = XLSX.utils.decode_range(ws1['!ref']);
+  // Mark header row and total row
+  summaryRows[0].forEach((_, ci) => {
+    const cellAddr = XLSX.utils.encode_cell({r:0, c:ci});
+    if (!ws1[cellAddr]) return;
+    ws1[cellAddr].s = { font:{bold:true}, fill:{fgColor:{rgb:'4C1D95'}}, alignment:{horizontal:'center'} };
+  });
+  const lastRow = summaryRows.length - 1;
+  summaryRows[summaryRows.length-1].forEach((_, ci) => {
+    const cellAddr = XLSX.utils.encode_cell({r:lastRow, c:ci});
+    if (!ws1[cellAddr]) return;
+    ws1[cellAddr].s = { font:{bold:true}, fill:{fgColor:{rgb:'1E1838'}} };
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'สรุปรายบุคคล');
+
+  // ── Sheet 2: รายการทั้งหมด ──
+  const detailRows = [
+    ['ชื่อ-สกุล', 'วันที่', 'วัน', 'เวลาเข้า', 'เวลาออก', 'ชม.ปกติ', 'ชม.OT', 'ประเภท', 'ค่าแรงต่อวัน (บาท)', 'ค่าแรงปกติ (บาท)', 'ค่า OT (บาท)', 'รวม (บาท)']
+  ];
+  entries.slice().sort((a,b)=>a.name.localeCompare(b.name,'th')||a.date.localeCompare(b.date)).forEach(e => {
+    const c = calcEntry(e);
+    const typeLabel = c.isWeekend ? 'วันหยุด (×1.5)' : c.otHours > 0 ? 'มี OT' : 'ปกติ';
+    detailRows.push([
+      e.name, e.date, DAYS_TH[c.dow], e.start, e.end,
+      +c.normalHours.toFixed(2), +c.otHours.toFixed(2),
+      typeLabel, +e.wage, +c.normalPay.toFixed(2), +c.otPay.toFixed(2), +c.totalPay.toFixed(2)
+    ]);
+  });
+
+  const ws2 = XLSX.utils.aoa_to_sheet(detailRows);
+  ws2['!cols'] = [28,12,10,10,10,12,10,16,20,20,16,16].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws2, 'รายการทั้งหมด');
+
+  // ── Sheet 3: สรุปแยกรายบุคคล (แต่ละคนมีรายการ) ──
+  Object.keys(map).forEach(name => {
+    const g = map[name];
+    const rows = [
+      [`รายการทำงาน: ${name}`],
+      [],
+      ['วันที่', 'วัน', 'เวลาเข้า', 'เวลาออก', 'ชม.ปกติ', 'ชม.OT', 'ประเภท', 'ค่าแรงต่อวัน', 'ค่าแรงปกติ', 'ค่า OT', 'รวม']
+    ];
+    let nh=0, oh=0, np=0, op=0;
+    g.records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(e => {
+      const c = calcEntry(e);
+      nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay;
+      const typeLabel = c.isWeekend ? 'วันหยุด (×1.5)' : c.otHours > 0 ? 'มี OT' : 'ปกติ';
+      rows.push([e.date, DAYS_TH[c.dow], e.start, e.end, +c.normalHours.toFixed(2), +c.otHours.toFixed(2), typeLabel, +e.wage, +c.normalPay.toFixed(2), +c.otPay.toFixed(2), +c.totalPay.toFixed(2)]);
+    });
+    rows.push([]);
+    rows.push(['รวม', '', '', '', +nh.toFixed(2), +oh.toFixed(2), '', '', +np.toFixed(2), +op.toFixed(2), +(np+op).toFixed(2)]);
+
+    const sheetName = name.replace(/[:\\/\?\*\[\]]/g,'').substring(0, 28);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [12,10,10,10,12,10,16,16,16,12,14].map(w=>({wch:w}));
+    try { XLSX.utils.book_append_sheet(wb, ws, sheetName); } catch(e) {}
+  });
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb, `สรุปค่าแรง_${dateStr}.xlsx`);
+  showToast('Export Excel สำเร็จ ✓');
+}
+
 // ─── INIT ───
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('inp-date').value = today;
+document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
 renderRecent();
 renderSummary();
 </script>
 </body>
 </html>
+
