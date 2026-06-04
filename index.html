@@ -8,295 +8,221 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --deep: #0d0a1a;
-    --card: #16112b;
-    --card2: #1e1838;
-    --border: #3a2f6b;
-    --purple1: #7c3aed;
-    --purple2: #9d5cf6;
-    --purple3: #c084fc;
-    --accent: #e879f9;
-    --gold: #fbbf24;
-    --green: #34d399;
-    --red: #f87171;
-    --text: #f0ebff;
-    --muted: #9585c8;
-    --sub: #6b5fa8;
+    --deep:#0d0a1a; --card:#16112b; --card2:#1e1838; --border:#3a2f6b;
+    --purple1:#7c3aed; --purple2:#9d5cf6; --purple3:#c084fc; --accent:#e879f9;
+    --gold:#fbbf24; --green:#34d399; --red:#f87171;
+    --text:#f0ebff; --muted:#9585c8; --sub:#6b5fa8;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Sarabun', sans-serif;
-    background: var(--deep);
-    color: var(--text);
-    min-height: 100vh;
-    background-image:
-      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(124,58,237,0.25) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 90% 110%, rgba(157,92,246,0.15) 0%, transparent 60%);
-  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Sarabun',sans-serif;background:var(--deep);color:var(--text);min-height:100vh;
+    background-image:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(124,58,237,.25) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 110%,rgba(157,92,246,.15) 0%,transparent 60%)}
+
+  /* SETUP BANNER */
+  #setup-banner{background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(232,121,249,.15));
+    border:1px solid rgba(157,92,246,.4);border-radius:16px;padding:20px 24px;margin-bottom:20px;
+    display:none;align-items:flex-start;gap:16px}
+  #setup-banner.show{display:flex}
+  .setup-icon{font-size:1.8rem;flex-shrink:0}
+  .setup-title{font-family:'Chakra Petch',sans-serif;font-size:1rem;font-weight:700;color:var(--purple3);margin-bottom:6px}
+  .setup-steps{font-size:0.85rem;color:var(--muted);line-height:1.8}
+  .setup-steps b{color:var(--text)}
+  .setup-steps code{background:rgba(124,58,237,.2);border:1px solid var(--border);
+    border-radius:5px;padding:1px 7px;font-family:monospace;font-size:0.82rem;color:var(--purple3)}
+  .setup-close{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;flex-shrink:0}
+  .setup-close:hover{color:var(--red)}
 
   /* HEADER */
-  header {
-    background: rgba(22,17,43,0.9);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 32px;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 64px;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .logo {
-    font-family: 'Chakra Petch', sans-serif;
-    font-size: 1.3rem; font-weight: 700;
-    background: linear-gradient(135deg, var(--purple2), var(--accent));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    letter-spacing: 0.04em;
-  }
-  .logo span { font-weight: 400; opacity: 0.7; font-size: 0.85rem; }
-  .badge {
-    background: linear-gradient(135deg, var(--purple1), var(--accent));
-    color: #fff; font-size: 0.72rem; font-weight: 600;
-    padding: 4px 12px; border-radius: 99px; letter-spacing: 0.06em;
-  }
+  header{background:rgba(22,17,43,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);
+    padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;
+    position:sticky;top:0;z-index:100}
+  .logo{font-family:'Chakra Petch',sans-serif;font-size:1.3rem;font-weight:700;
+    background:linear-gradient(135deg,var(--purple2),var(--accent));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.04em}
+  .logo span{font-weight:400;opacity:.7;font-size:.85rem}
+  .badge{background:linear-gradient(135deg,var(--purple1),var(--accent));color:#fff;
+    font-size:.72rem;font-weight:600;padding:4px 12px;border-radius:99px;letter-spacing:.06em}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--sub);display:inline-block;margin-right:6px;transition:background .3s}
+  .conn-dot.online{background:var(--green)}
+  .conn-dot.offline{background:var(--red)}
+  #conn-status{font-size:.8rem;color:var(--muted);display:flex;align-items:center}
 
   /* LAYOUT */
-  .container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
-  .tabs {
-    display: flex; gap: 4px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 6px; margin-bottom: 28px; width: fit-content;
-  }
-  .tab-btn {
-    padding: 10px 24px; border: none; background: transparent;
-    color: var(--muted); font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem; font-weight: 500; border-radius: 10px; cursor: pointer; transition: all .2s;
-  }
-  .tab-btn.active {
-    background: linear-gradient(135deg, var(--purple1), var(--purple2));
-    color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.4);
-  }
-  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.06); }
-  .page { display: none; }
-  .page.active { display: block; animation: fadeIn .25s ease; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .container{max-width:1280px;margin:0 auto;padding:32px 24px}
+  .tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:6px;margin-bottom:28px;width:fit-content}
+  .tab-btn{padding:10px 24px;border:none;background:transparent;color:var(--muted);
+    font-family:'Sarabun',sans-serif;font-size:.95rem;font-weight:500;border-radius:10px;cursor:pointer;transition:all .2s}
+  .tab-btn.active{background:linear-gradient(135deg,var(--purple1),var(--purple2));color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.4)}
+  .tab-btn:hover:not(.active){color:var(--text);background:rgba(255,255,255,.06)}
+  .page{display:none}
+  .page.active{display:block;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
   /* CARD */
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; margin-bottom: 20px; }
-  .card-title {
-    font-family: 'Chakra Petch', sans-serif; font-size: 1.05rem; font-weight: 600;
-    color: var(--purple3); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
-  }
-  .card-title::before { content: ''; display: block; width: 4px; height: 18px; background: linear-gradient(var(--purple1), var(--accent)); border-radius: 2px; }
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;margin-bottom:20px}
+  .card-title{font-family:'Chakra Petch',sans-serif;font-size:1.05rem;font-weight:600;color:var(--purple3);
+    margin-bottom:20px;display:flex;align-items:center;gap:10px}
+  .card-title::before{content:'';display:block;width:4px;height:18px;
+    background:linear-gradient(var(--purple1),var(--accent));border-radius:2px}
 
   /* FORM */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .form-group { display: flex; flex-direction: column; gap: 7px; }
-  .form-group.full { grid-column: 1/-1; }
-  label { font-size: 0.85rem; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
-  input, select {
-    background: var(--card2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 11px 14px; color: var(--text); font-family: 'Sarabun', sans-serif;
-    font-size: 0.95rem; outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
-  }
-  input:focus, select:focus { border-color: var(--purple2); box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
-  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(3) hue-rotate(220deg); }
-  .time-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
-  .time-sep { color: var(--muted); font-size: 1.1rem; text-align: center; }
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form-group{display:flex;flex-direction:column;gap:7px}
+  .form-group.full{grid-column:1/-1}
+  label{font-size:.85rem;font-weight:500;color:var(--muted);letter-spacing:.02em}
+  input,select{background:var(--card2);border:1px solid var(--border);border-radius:10px;
+    padding:11px 14px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:.95rem;
+    outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+  input:focus,select:focus{border-color:var(--purple2);box-shadow:0 0 0 3px rgba(124,58,237,.2)}
+  input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.7) sepia(1) saturate(3) hue-rotate(220deg)}
+  .time-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+  .time-sep{color:var(--muted);font-size:1.1rem;text-align:center}
 
-  .btn {
-    padding: 12px 28px; border: none; border-radius: 10px;
-    font-family: 'Sarabun', sans-serif; font-size: 0.95rem; font-weight: 600;
-    cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 8px;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--purple1), var(--purple2));
-    color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.35);
-  }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,58,237,0.5); }
-  .btn-secondary { background: var(--card2); border: 1px solid var(--border); color: var(--muted); }
-  .btn-secondary:hover { border-color: var(--purple2); color: var(--text); }
-  .btn-danger { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
-  .btn-danger:hover { background: rgba(248,113,113,0.25); }
-  .btn-edit { background: rgba(157,92,246,0.15); border: 1px solid rgba(157,92,246,0.3); color: var(--purple3); }
-  .btn-edit:hover { background: rgba(157,92,246,0.28); }
-  .form-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn{padding:12px 28px;border:none;border-radius:10px;font-family:'Sarabun',sans-serif;
+    font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:linear-gradient(135deg,var(--purple1),var(--purple2));color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.35)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,.5)}
+  .btn-primary:disabled{opacity:.5;transform:none;cursor:not-allowed}
+  .btn-secondary{background:var(--card2);border:1px solid var(--border);color:var(--muted)}
+  .btn-secondary:hover{border-color:var(--purple2);color:var(--text)}
+  .btn-danger{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+  .btn-danger:hover{background:rgba(248,113,113,.25)}
+  .btn-edit{background:rgba(157,92,246,.15);border:1px solid rgba(157,92,246,.3);color:var(--purple3)}
+  .btn-edit:hover{background:rgba(157,92,246,.28)}
+  .btn-export{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.35);color:var(--green)}
+  .btn-export:hover{background:rgba(52,211,153,.28)}
+  .form-actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
 
   /* STATS */
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .stat-box {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
-  }
-  .stat-box::after {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--purple1), var(--accent)); border-radius: 14px 14px 0 0;
-  }
-  .stat-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
-  .stat-value { font-family: 'Chakra Petch', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text); }
-  .stat-sub { font-size: 0.78rem; color: var(--sub); margin-top: 4px; }
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+  .stat-box{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:20px;position:relative;overflow:hidden}
+  .stat-box::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--purple1),var(--accent));border-radius:14px 14px 0 0}
+  .stat-label{font-size:.8rem;color:var(--muted);margin-bottom:6px}
+  .stat-value{font-family:'Chakra Petch',sans-serif;font-size:1.6rem;font-weight:700;color:var(--text)}
+  .stat-sub{font-size:.78rem;color:var(--sub);margin-top:4px}
 
   /* TABLE */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  thead tr { border-bottom: 2px solid var(--border); }
-  th { padding: 12px 16px; text-align: left; font-size: 0.8rem; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
-  td { padding: 14px 16px; font-size: 0.9rem; border-bottom: 1px solid rgba(58,47,107,0.5); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(124,58,237,0.06); }
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  thead tr{border-bottom:2px solid var(--border)}
+  th{padding:12px 16px;text-align:left;font-size:.8rem;font-weight:600;color:var(--muted);
+    letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  td{padding:14px 16px;font-size:.9rem;border-bottom:1px solid rgba(58,47,107,.5);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(124,58,237,.06)}
+  .chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600}
+  .chip-ot{background:rgba(251,191,36,.15);color:var(--gold);border:1px solid rgba(251,191,36,.3)}
+  .chip-normal{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+  .chip-weekend{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+  .emp-name{font-weight:600;color:var(--purple3)}
+  .money{font-family:'Chakra Petch',sans-serif;font-weight:600}
+  .money-total{color:var(--gold)}
+  .money-normal{color:var(--green)}
+  .money-ot{color:var(--accent)}
+  .btn-view{padding:6px 14px;border:1px solid var(--purple1);background:rgba(124,58,237,.1);
+    color:var(--purple3);border-radius:8px;font-family:'Sarabun',sans-serif;font-size:.82rem;
+    font-weight:600;cursor:pointer;transition:all .2s}
+  .btn-view:hover{background:rgba(124,58,237,.25);color:#fff}
+  .row-actions{display:flex;gap:6px}
+  .row-actions .btn{padding:5px 10px;font-size:.78rem}
 
-  .chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 600; }
-  .chip-ot { background: rgba(251,191,36,0.15); color: var(--gold); border: 1px solid rgba(251,191,36,0.3); }
-  .chip-normal { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
-  .chip-weekend { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
-  .emp-name { font-weight: 600; color: var(--purple3); }
-  .money { font-family: 'Chakra Petch', sans-serif; font-weight: 600; }
-  .money-total { color: var(--gold); }
-  .money-normal { color: var(--green); }
-  .money-ot { color: var(--accent); }
-
-  .btn-view {
-    padding: 6px 14px; border: 1px solid var(--purple1);
-    background: rgba(124,58,237,0.1); color: var(--purple3);
-    border-radius: 8px; font-family: 'Sarabun', sans-serif;
-    font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all .2s;
-  }
-  .btn-view:hover { background: rgba(124,58,237,0.25); color: #fff; }
-
-  /* ACTION BUTTONS IN ROW */
-  .row-actions { display: flex; gap: 6px; }
-  .row-actions .btn { padding: 5px 10px; font-size: 0.78rem; }
+  /* LOADING */
+  .loading-row td{text-align:center;color:var(--muted);padding:32px!important}
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);
+    border-top-color:var(--purple2);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   /* MODAL */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
-    z-index: 1000; align-items: center; justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 20px; padding: 32px;
-    max-width: 820px; width: 95%; max-height: 85vh;
-    overflow-y: auto; position: relative; animation: modalIn .25s ease;
-  }
-  @keyframes modalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
-  .modal-close {
-    position: absolute; top: 16px; right: 16px;
-    background: rgba(255,255,255,0.08); border: none; color: var(--muted);
-    width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
-    font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all .2s;
-  }
-  .modal-close:hover { background: rgba(248,113,113,0.2); color: var(--red); }
-  .modal-emp-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-  .emp-avatar {
-    width: 52px; height: 52px;
-    background: linear-gradient(135deg, var(--purple1), var(--accent));
-    border-radius: 14px; display: flex; align-items: center; justify-content: center;
-    font-family: 'Chakra Petch', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fff;
-  }
-  .modal-emp-name { font-size: 1.2rem; font-weight: 700; color: var(--text); }
-  .modal-emp-sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
-  .modal-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
-  .mini-stat { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
-  .mini-stat .v { font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; font-weight: 700; }
-  .mini-stat .l { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+    backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;
+    max-width:820px;width:95%;max-height:85vh;overflow-y:auto;position:relative;animation:modalIn .25s ease}
+  @keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:none;
+    color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;
+    display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .modal-close:hover{background:rgba(248,113,113,.2);color:var(--red)}
+  .modal-emp-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+  .emp-avatar{width:52px;height:52px;background:linear-gradient(135deg,var(--purple1),var(--accent));
+    border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-family:'Chakra Petch',sans-serif;font-size:1.3rem;font-weight:700;color:#fff}
+  .modal-emp-name{font-size:1.2rem;font-weight:700;color:var(--text)}
+  .modal-emp-sub{font-size:.85rem;color:var(--muted);margin-top:2px}
+  .modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .mini-stat{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .mini-stat .v{font-family:'Chakra Petch',sans-serif;font-size:1.25rem;font-weight:700}
+  .mini-stat .l{font-size:.75rem;color:var(--muted);margin-top:2px}
+  .edit-modal{max-width:500px}
+  .edit-modal .form-grid{grid-template-columns:1fr}
+  .edit-modal-title{font-family:'Chakra Petch',sans-serif;font-size:1rem;font-weight:600;
+    color:var(--purple3);margin-bottom:20px;display:flex;align-items:center;gap:8px}
 
-  /* EDIT MODAL */
-  .edit-modal {
-    max-width: 500px;
-  }
-  .edit-modal .form-grid { grid-template-columns: 1fr; }
-  .edit-modal-title {
-    font-family: 'Chakra Petch', sans-serif; font-size: 1rem; font-weight: 600;
-    color: var(--purple3); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
-  }
-
-  /* PIN LOCK */
-  .pin-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
-    z-index: 2000; align-items: center; justify-content: center;
-  }
-  .pin-overlay.open { display: flex; }
-  .pin-box {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 24px; padding: 40px 36px; max-width: 380px; width: 95%;
-    text-align: center; animation: modalIn .3s ease;
-  }
-  .pin-icon {
-    width: 64px; height: 64px; margin: 0 auto 20px;
-    background: linear-gradient(135deg, var(--purple1), var(--accent));
-    border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
-  }
-  .pin-title { font-family: 'Chakra Petch', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
-  .pin-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 28px; }
-  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
-  .pin-dot {
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 2px solid var(--border); background: transparent; transition: all .2s;
-  }
-  .pin-dot.filled { background: var(--purple2); border-color: var(--purple2); box-shadow: 0 0 8px rgba(157,92,246,0.6); }
-  .pin-dot.error { background: var(--red); border-color: var(--red); }
-  .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 240px; margin: 0 auto; }
-  .pin-key {
-    aspect-ratio: 1; border: 1px solid var(--border); background: var(--card2);
-    color: var(--text); font-family: 'Chakra Petch', sans-serif; font-size: 1.2rem; font-weight: 600;
-    border-radius: 12px; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center;
-  }
-  .pin-key:hover { background: rgba(124,58,237,0.2); border-color: var(--purple2); }
-  .pin-key:active { transform: scale(0.93); }
-  .pin-key.del { color: var(--red); font-size: 1rem; }
-  .pin-key.zero { grid-column: 2; }
-  .pin-error { color: var(--red); font-size: 0.85rem; margin-top: 16px; min-height: 20px; }
-
-  /* CHANGE PIN SECTION */
-  .change-pin-section {
-    background: var(--card2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; margin-top: 16px;
-  }
-  .change-pin-title { font-size: 0.9rem; font-weight: 600; color: var(--purple3); margin-bottom: 14px; }
-  .change-pin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .change-pin-input {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 10px 14px; color: var(--text); font-family: 'Sarabun', sans-serif;
-    font-size: 0.9rem; outline: none; width: 100%; letter-spacing: 0.2em;
-  }
-  .change-pin-input:focus { border-color: var(--purple2); box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
+  /* PIN */
+  .pin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+    backdrop-filter:blur(12px);z-index:2000;align-items:center;justify-content:center}
+  .pin-overlay.open{display:flex}
+  .pin-box{background:var(--card);border:1px solid var(--border);border-radius:24px;
+    padding:40px 36px;max-width:380px;width:95%;text-align:center;animation:modalIn .3s ease}
+  .pin-icon{width:64px;height:64px;margin:0 auto 20px;
+    background:linear-gradient(135deg,var(--purple1),var(--accent));
+    border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+  .pin-title{font-family:'Chakra Petch',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:6px}
+  .pin-sub{color:var(--muted);font-size:.88rem;margin-bottom:28px}
+  .pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:24px}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all .2s}
+  .pin-dot.filled{background:var(--purple2);border-color:var(--purple2);box-shadow:0 0 8px rgba(157,92,246,.6)}
+  .pin-dot.error{background:var(--red);border-color:var(--red)}
+  .pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto}
+  .pin-key{aspect-ratio:1;border:1px solid var(--border);background:var(--card2);color:var(--text);
+    font-family:'Chakra Petch',sans-serif;font-size:1.2rem;font-weight:600;border-radius:12px;
+    cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+  .pin-key:hover{background:rgba(124,58,237,.2);border-color:var(--purple2)}
+  .pin-key:active{transform:scale(.93)}
+  .pin-key.del{color:var(--red);font-size:1rem}
+  .pin-key.zero{grid-column:2}
+  .pin-error{color:var(--red);font-size:.85rem;margin-top:16px;min-height:20px}
+  .change-pin-section{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:16px}
+  .change-pin-title{font-size:.9rem;font-weight:600;color:var(--purple3);margin-bottom:14px}
+  .change-pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .change-pin-input{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:.9rem;
+    outline:none;width:100%;letter-spacing:.2em}
+  .change-pin-input:focus{border-color:var(--purple2);box-shadow:0 0 0 3px rgba(124,58,237,.2)}
 
   /* TOAST */
-  #toast {
-    position: fixed; bottom: 28px; right: 28px;
-    background: var(--card); border: 1px solid var(--green);
-    border-radius: 12px; padding: 14px 22px; color: var(--green);
-    font-weight: 600; font-size: 0.9rem; z-index: 9999;
-    transform: translateY(80px); opacity: 0; transition: all .3s ease;
-    display: flex; align-items: center; gap: 8px;
-  }
-  #toast.show { transform: translateY(0); opacity: 1; }
-  #toast.error { border-color: var(--red); color: var(--red); }
+  #toast{position:fixed;bottom:28px;right:28px;background:var(--card);border:1px solid var(--green);
+    border-radius:12px;padding:14px 22px;color:var(--green);font-weight:600;font-size:.9rem;
+    z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s ease;display:flex;align-items:center;gap:8px}
+  #toast.show{transform:translateY(0);opacity:1}
 
   /* EMPTY */
-  .empty { text-align: center; padding: 60px 20px; color: var(--sub); }
-  .empty svg { opacity: 0.3; margin-bottom: 12px; }
-  .empty p { font-size: 0.95rem; }
+  .empty{text-align:center;padding:60px 20px;color:var(--sub)}
+  .empty svg{opacity:.3;margin-bottom:12px}
 
-  .btn-export { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.35); color: var(--green); }
-  .btn-export:hover { background: rgba(52,211,153,0.28); }
+  /* SCRIPT URL BOX */
+  .url-input-wrap{display:flex;gap:8px;align-items:center}
+  .url-input-wrap input{font-size:.82rem;font-family:monospace}
+  .url-save-btn{flex-shrink:0;padding:11px 16px;white-space:nowrap}
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--deep); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:var(--deep)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
   @media(max-width:768px){
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .form-grid { grid-template-columns: 1fr; }
-    .form-group.full { grid-column: 1; }
-    .modal-stats { grid-template-columns: 1fr 1fr; }
-    .change-pin-grid { grid-template-columns: 1fr; }
+    .stats-grid{grid-template-columns:1fr 1fr}
+    .form-grid{grid-template-columns:1fr}
+    .form-group.full{grid-column:1}
+    .modal-stats{grid-template-columns:1fr 1fr}
+    .change-pin-grid{grid-template-columns:1fr}
   }
   @media(max-width:480px){
-    .stats-grid { grid-template-columns: 1fr; }
-    .tabs { width: 100%; }
-    .tab-btn { flex: 1; text-align: center; }
+    .stats-grid{grid-template-columns:1fr}
+    .tabs{width:100%}
+    .tab-btn{flex:1;text-align:center}
   }
 </style>
 </head>
@@ -304,10 +230,36 @@
 
 <header>
   <div><div class="logo">TimeTrack <span>| ระบบบันทึกเวลาทำงาน</span></div></div>
-  <div class="badge">HR SYSTEM</div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div id="conn-status"><span class="conn-dot" id="conn-dot"></span><span id="conn-text">กำลังเชื่อมต่อ...</span></div>
+    <div class="badge">HR SYSTEM</div>
+  </div>
 </header>
 
 <div class="container">
+
+  <!-- SETUP BANNER -->
+  <div id="setup-banner" class="show">
+    <div class="setup-icon">⚙️</div>
+    <div style="flex:1">
+      <div class="setup-title">ตั้งค่าการเชื่อมต่อ Google Sheets (ครั้งแรกเท่านั้น)</div>
+      <div class="setup-steps">
+        ข้อมูลจะเก็บใน Google Sheets เพื่อให้ทุกคนเห็นข้อมูลเดียวกัน<br>
+        <b>วิธีตั้งค่า:</b> เปิด Google Sheets ใหม่ → เมนู <b>Extensions → Apps Script</b> → วางโค้ด Apps Script → Deploy → คัดลอก Web App URL มาใส่ด้านล่าง
+        <br><br>
+        <b>ดูคู่มือ Apps Script ได้ที่ปุ่ม "📖 คู่มือ" ด้านล่าง</b>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="script-url-input" placeholder="วาง Google Apps Script Web App URL ที่นี่ (https://script.google.com/...)"
+          style="max-width:520px;font-size:.82rem;font-family:monospace;background:var(--card2);border:1px solid var(--border);
+          border-radius:10px;padding:10px 14px;color:var(--text);outline:none;width:100%">
+        <button class="btn btn-primary" style="padding:10px 18px;font-size:.85rem" onclick="saveScriptUrl()">💾 บันทึก URL</button>
+        <button class="btn btn-secondary" style="padding:10px 18px;font-size:.85rem" onclick="showGuide()">📖 คู่มือ Apps Script</button>
+      </div>
+    </div>
+    <button class="setup-close" onclick="document.getElementById('setup-banner').classList.remove('show')">✕</button>
+  </div>
+
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('entry')">📋 บันทึกเวลาทำงาน</button>
     <button class="tab-btn" onclick="switchTab('summary')">📊 สรุปรายงาน</button>
@@ -347,18 +299,19 @@
     </div>
 
     <div class="card">
-      <div class="card-title">รายการที่บันทึกล่าสุด</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div class="card-title" style="margin-bottom:0">รายการที่บันทึกล่าสุด</div>
+        <button class="btn btn-secondary" style="font-size:.82rem;padding:8px 14px" onclick="loadEntries()">🔄 รีเฟรช</button>
+      </div>
       <div class="table-wrap">
-        <table id="recent-table">
-          <thead>
-            <tr>
-              <th>ชื่อ-สกุล</th><th>วันที่</th><th>เวลาเข้า</th><th>เวลาออก</th>
-              <th>ชม.ปกติ</th><th>ชม.OT</th><th>ประเภท</th><th>ค่าแรง</th><th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="recent-tbody"></tbody>
+        <table>
+          <thead><tr>
+            <th>ชื่อ-สกุล</th><th>วันที่</th><th>เวลาเข้า</th><th>เวลาออก</th>
+            <th>ชม.ปกติ</th><th>ชม.OT</th><th>ประเภท</th><th>ค่าแรง</th><th>จัดการ</th>
+          </tr></thead>
+          <tbody id="recent-tbody"><tr class="loading-row"><td colspan="9"><span class="spinner"></span>กำลังโหลด...</td></tr></tbody>
         </table>
-        <div id="recent-empty" class="empty">
+        <div id="recent-empty" class="empty" style="display:none">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <p>ยังไม่มีรายการบันทึก</p>
         </div>
@@ -366,34 +319,32 @@
     </div>
   </div>
 
-  <!-- PAGE: SUMMARY (locked) -->
+  <!-- PAGE: SUMMARY -->
   <div id="page-summary" class="page">
     <div class="stats-grid">
-      <div class="stat-box"><div class="stat-label">พนักงานทั้งหมด</div><div class="stat-value" id="s-emp">0</div><div class="stat-sub">คน</div></div>
-      <div class="stat-box"><div class="stat-label">รายการทั้งหมด</div><div class="stat-value" id="s-records">0</div><div class="stat-sub">รายการ</div></div>
-      <div class="stat-box"><div class="stat-label">ชม.ทำงานรวม</div><div class="stat-value" id="s-hours">0</div><div class="stat-sub">ชั่วโมง</div></div>
-      <div class="stat-box"><div class="stat-label">ค่าแรงรวมทั้งหมด</div><div class="stat-value money-total" id="s-total">฿0</div><div class="stat-sub">บาท</div></div>
+      <div class="stat-box"><div class="stat-label">พนักงานทั้งหมด</div><div class="stat-value" id="s-emp">—</div><div class="stat-sub">คน</div></div>
+      <div class="stat-box"><div class="stat-label">รายการทั้งหมด</div><div class="stat-value" id="s-records">—</div><div class="stat-sub">รายการ</div></div>
+      <div class="stat-box"><div class="stat-label">ชม.ทำงานรวม</div><div class="stat-value" id="s-hours">—</div><div class="stat-sub">ชั่วโมง</div></div>
+      <div class="stat-box"><div class="stat-label">ค่าแรงรวมทั้งหมด</div><div class="stat-value money-total" id="s-total">—</div><div class="stat-sub">บาท</div></div>
     </div>
-
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
         <div class="card-title" style="margin-bottom:0">สรุปค่าแรงพนักงานรายบุคคล</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-export" style="font-size:0.82rem;padding:8px 16px" onclick="exportExcel()">📥 Export Excel</button>
-          <button class="btn btn-secondary" style="font-size:0.82rem;padding:8px 16px" onclick="openChangePinModal()">🔐 เปลี่ยนรหัสผ่าน</button>
+          <button class="btn btn-export" style="font-size:.82rem;padding:8px 16px" onclick="exportExcel()">📥 Export Excel</button>
+          <button class="btn btn-secondary" style="font-size:.82rem;padding:8px 16px" onclick="loadEntries()">🔄 รีเฟรช</button>
+          <button class="btn btn-secondary" style="font-size:.82rem;padding:8px 16px" onclick="openChangePinModal()">🔐 เปลี่ยนรหัสผ่าน</button>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>ชื่อ-สกุล</th><th>วันทำงาน</th><th>ชม.ปกติ (×1)</th><th>ชม.OT (×1.5)</th>
-              <th>ค่าแรงปกติ</th><th>ค่า OT</th><th>รวม</th><th>รายละเอียด</th>
-            </tr>
-          </thead>
-          <tbody id="summary-tbody"></tbody>
+          <thead><tr>
+            <th>ชื่อ-สกุล</th><th>วันทำงาน</th><th>ชม.ปกติ (×1)</th><th>ชม.OT (×1.5)</th>
+            <th>ค่าแรงปกติ</th><th>ค่า OT</th><th>รวม</th><th>รายละเอียด</th>
+          </tr></thead>
+          <tbody id="summary-tbody"><tr class="loading-row"><td colspan="8"><span class="spinner"></span>กำลังโหลด...</td></tr></tbody>
         </table>
-        <div id="summary-empty" class="empty">
+        <div id="summary-empty" class="empty" style="display:none">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <p>ยังไม่มีข้อมูลพนักงาน</p>
         </div>
@@ -430,26 +381,11 @@
     <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
     <div class="edit-modal-title">✏️ แก้ไขรายการทำงาน</div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>ชื่อ-สกุล พนักงาน</label>
-        <input type="text" id="edit-name" placeholder="ชื่อ-สกุล">
-      </div>
-      <div class="form-group">
-        <label>วันที่ทำงาน</label>
-        <input type="date" id="edit-date">
-      </div>
-      <div class="form-group">
-        <label>ค่าแรงต่อวัน (บาท)</label>
-        <input type="number" id="edit-wage" min="0">
-      </div>
-      <div class="form-group">
-        <label>เวลาเข้า</label>
-        <input type="time" id="edit-start">
-      </div>
-      <div class="form-group">
-        <label>เวลาออก</label>
-        <input type="time" id="edit-end">
-      </div>
+      <div class="form-group"><label>ชื่อ-สกุล พนักงาน</label><input type="text" id="edit-name"></div>
+      <div class="form-group"><label>วันที่ทำงาน</label><input type="date" id="edit-date"></div>
+      <div class="form-group"><label>ค่าแรงต่อวัน (บาท)</label><input type="number" id="edit-wage" min="0"></div>
+      <div class="form-group"><label>เวลาเข้า</label><input type="time" id="edit-start"></div>
+      <div class="form-group"><label>เวลาออก</label><input type="time" id="edit-end"></div>
     </div>
     <div class="form-actions">
       <button class="btn btn-primary" onclick="confirmEdit()">💾 บันทึกการแก้ไข</button>
@@ -458,17 +394,106 @@
   </div>
 </div>
 
-<!-- PIN LOCK OVERLAY -->
+<!-- MODAL: Guide -->
+<div class="modal-overlay" id="guide-modal">
+  <div class="modal" style="max-width:680px">
+    <button class="modal-close" onclick="closeModal('guide-modal')">✕</button>
+    <div class="edit-modal-title">📖 คู่มือตั้งค่า Google Apps Script</div>
+    <div style="font-size:.9rem;line-height:1.9;color:var(--muted)">
+      <p style="margin-bottom:14px;color:var(--text);font-weight:600">ทำครั้งเดียว ข้อมูลจะเก็บใน Google Sheets ของคุณตลอดไป</p>
+      <ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px">
+        <li>เปิด <a href="https://sheets.new" target="_blank" style="color:var(--purple3)">sheets.new</a> สร้าง Google Sheets ใหม่ ตั้งชื่อว่า <b>"TimeTrack DB"</b></li>
+        <li>คลิกเมนู <b>Extensions → Apps Script</b></li>
+        <li>ลบโค้ดเดิมออก แล้ววาง <b>โค้ด Apps Script</b> ด้านล่างนี้ทั้งหมด</li>
+        <li>กด <b>💾 Save</b> แล้วกด <b>▶ Deploy → New deployment</b></li>
+        <li>เลือก Type: <b>Web App</b>, Execute as: <b>Me</b>, Who has access: <b>Anyone</b></li>
+        <li>กด <b>Deploy</b> → <b>Authorize access</b> → คัดลอก <b>Web App URL</b></li>
+        <li>นำ URL มาวางในช่องด้านบนของเว็บนี้ แล้วกด "บันทึก URL"</li>
+      </ol>
+      <div style="margin-top:20px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="font-size:.78rem;color:var(--purple3);font-weight:600;margin-bottom:10px;font-family:'Chakra Petch',sans-serif">📋 โค้ด Apps Script (คัดลอกทั้งหมด)</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <button class="btn btn-secondary" style="padding:5px 12px;font-size:.78rem" onclick="copyCode()">📋 คัดลอกโค้ด</button>
+        </div>
+        <pre id="gas-code" style="font-size:.75rem;line-height:1.6;color:var(--green);overflow-x:auto;white-space:pre-wrap">const SHEET_NAME = 'entries';
+
+function doGet(e) {
+  return handleRequest(e);
+}
+
+function doPost(e) {
+  return handleRequest(e);
+}
+
+function handleRequest(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(['id','name','date','start','end','wage','createdAt']);
+  }
+  const p = e.parameter || {};
+  const action = p.action || (e.postData ? JSON.parse(e.postData.contents).action : 'get');
+  let body;
+
+  try {
+    if (action === 'get') {
+      const rows = sheet.getDataRange().getValues();
+      const headers = rows[0];
+      const data = rows.slice(1).map(r => {
+        const obj = {};
+        headers.forEach((h,i) => obj[h] = r[i]);
+        return obj;
+      }).filter(r => r.id);
+      body = { ok: true, data };
+
+    } else if (action === 'add') {
+      const d = JSON.parse(e.postData.contents);
+      const id = Utilities.getUuid();
+      sheet.appendRow([id, d.name, d.date, d.start, d.end, d.wage, new Date().toISOString()]);
+      body = { ok: true, id };
+
+    } else if (action === 'update') {
+      const d = JSON.parse(e.postData.contents);
+      const rows = sheet.getDataRange().getValues();
+      for (let i = 1; i < rows.length; i++) {
+        if (rows[i][0] == d.id) {
+          sheet.getRange(i+1,2,1,5).setValues([[d.name,d.date,d.start,d.end,d.wage]]);
+          break;
+        }
+      }
+      body = { ok: true };
+
+    } else if (action === 'delete') {
+      const d = JSON.parse(e.postData.contents);
+      const rows = sheet.getDataRange().getValues();
+      for (let i = 1; i < rows.length; i++) {
+        if (rows[i][0] == d.id) { sheet.deleteRow(i+1); break; }
+      }
+      body = { ok: true };
+    }
+  } catch(err) {
+    body = { ok: false, error: err.message };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(body))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN LOCK -->
 <div class="pin-overlay" id="pin-overlay">
   <div class="pin-box">
     <div class="pin-icon">🔒</div>
     <div class="pin-title">หน้าสรุปรายงาน</div>
     <div class="pin-sub">กรุณาใส่รหัสผ่าน 4 หลัก เพื่อเข้าถึงข้อมูล</div>
     <div class="pin-dots">
-      <div class="pin-dot" id="dot-0"></div>
-      <div class="pin-dot" id="dot-1"></div>
-      <div class="pin-dot" id="dot-2"></div>
-      <div class="pin-dot" id="dot-3"></div>
+      <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
     </div>
     <div class="pin-keypad">
       <button class="pin-key" onclick="pinInput('1')">1</button>
@@ -495,14 +520,10 @@
     <div class="change-pin-section">
       <div class="change-pin-title">กรอกรหัสผ่านใหม่</div>
       <div class="change-pin-grid">
-        <div class="form-group">
-          <label>รหัสผ่านใหม่ (4 หลัก)</label>
-          <input class="change-pin-input" type="password" id="new-pin" maxlength="4" inputmode="numeric" placeholder="••••">
-        </div>
-        <div class="form-group">
-          <label>ยืนยันรหัสผ่านใหม่</label>
-          <input class="change-pin-input" type="password" id="confirm-pin" maxlength="4" inputmode="numeric" placeholder="••••">
-        </div>
+        <div class="form-group"><label>รหัสผ่านใหม่ (4 หลัก)</label>
+          <input class="change-pin-input" type="password" id="new-pin" maxlength="4" inputmode="numeric" placeholder="••••"></div>
+        <div class="form-group"><label>ยืนยันรหัสผ่านใหม่</label>
+          <input class="change-pin-input" type="password" id="confirm-pin" maxlength="4" inputmode="numeric" placeholder="••••"></div>
       </div>
     </div>
     <div class="form-actions" style="margin-top:16px">
@@ -516,183 +537,221 @@
 
 <script>
 const DAYS_TH = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-let entries = JSON.parse(localStorage.getItem('tt_entries') || '[]');
-let editingIndex = null;
-
-// ─── PIN ───
 const DEFAULT_PIN = '5210';
-function getPin() { return localStorage.getItem('tt_pin') || DEFAULT_PIN; }
+const SCRIPT_URL_KEY = 'tt_script_url';
+const PIN_KEY = 'tt_pin';
+
+let entries = [];         // loaded from Sheets
+let editingId = null;
 let pinBuffer = '';
 let summaryUnlocked = false;
 
-function save() { localStorage.setItem('tt_entries', JSON.stringify(entries)); }
-function fmt(n) { return n.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-function fmtH(h) { return h.toFixed(2); }
-
-// ─── CALCULATE WAGES (with lunch break 12:00-13:00 excluded) ───
-function calcEntry(entry) {
-  const [sh, sm] = entry.start.split(':').map(Number);
-  const [eh, em] = entry.end.split(':').map(Number);
-  const startMin = sh * 60 + sm;
-  const endMin   = eh * 60 + em;
-
-  const dateObj  = new Date(entry.date + 'T00:00:00');
-  const dow      = dateObj.getDay();
-  const isWeekend = dow === 0 || dow === 6;
-
-  const workStart  = 8  * 60;  // 08:00
-  const workEnd    = 17 * 60;  // 17:00
-  const lunchStart = 12 * 60;  // 12:00
-  const lunchEnd   = 13 * 60;  // 13:00
-
-  // Helper: minutes of overlap between [a,b) and [c,d)
-  function overlap(a, b, c, d) { return Math.max(0, Math.min(b,d) - Math.max(a,c)); }
-
-  // Remove lunch break from any interval
-  function deductLunch(from, to) {
-    return Math.max(0, (to - from) - overlap(from, to, lunchStart, lunchEnd));
+// ─── SCRIPT URL ───
+function getScriptUrl() { return localStorage.getItem(SCRIPT_URL_KEY) || ''; }
+function saveScriptUrl() {
+  const v = document.getElementById('script-url-input').value.trim();
+  if (!v || !v.startsWith('https://script.google.com')) {
+    showToast('URL ไม่ถูกต้อง ต้องเริ่มต้นด้วย https://script.google.com', true); return;
   }
-
-  let normalHours = 0, otHours = 0;
-
-  if (isWeekend) {
-    // Weekend: all time = OT 1.5×, but still deduct lunch
-    otHours = deductLunch(startMin, endMin) / 60;
-  } else {
-    // Normal time: overlap with 08:00–17:00 minus lunch
-    const nFrom = Math.max(startMin, workStart);
-    const nTo   = Math.min(endMin, workEnd);
-    if (nTo > nFrom) {
-      normalHours = deductLunch(nFrom, nTo) / 60;
-    }
-    // OT: time after 17:00 (lunch cannot fall after 17:00 so no deduction needed)
-    if (endMin > workEnd) {
-      otHours = (endMin - Math.max(startMin, workEnd)) / 60;
-    }
-  }
-
-  const hourlyRate = entry.wage / 8;
-  const normalPay  = normalHours * hourlyRate;
-  const otPay      = otHours * hourlyRate * 1.5;
-  const totalPay   = normalPay + otPay;
-
-  return { normalHours, otHours, normalPay, otPay, totalPay, isWeekend, dow };
+  localStorage.setItem(SCRIPT_URL_KEY, v);
+  document.getElementById('setup-banner').classList.remove('show');
+  showToast('บันทึก URL สำเร็จ กำลังโหลดข้อมูล...');
+  setConn('connecting');
+  loadEntries();
 }
 
-// ─── RENDER RECENT ───
+// ─── CONNECTION STATUS ───
+function setConn(state) {
+  const dot  = document.getElementById('conn-dot');
+  const txt  = document.getElementById('conn-text');
+  dot.className = 'conn-dot ' + state;
+  txt.textContent = state === 'online' ? 'เชื่อมต่อแล้ว' : state === 'offline' ? 'ไม่ได้เชื่อมต่อ' : 'กำลังเชื่อมต่อ...';
+}
+
+// ─── API ───
+async function api(params, body) {
+  const url = getScriptUrl();
+  if (!url) { setConn('offline'); return null; }
+  setConn('connecting');
+  try {
+    let res;
+    if (body) {
+      res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ ...body, action: params.action }),
+        headers: { 'Content-Type': 'text/plain' }   // avoid CORS preflight
+      });
+    } else {
+      res = await fetch(`${url}?action=${params.action}`);
+    }
+    const json = await res.json();
+    setConn(json.ok ? 'online' : 'offline');
+    return json;
+  } catch(e) {
+    setConn('offline');
+    return null;
+  }
+}
+
+// ─── LOAD ───
+async function loadEntries() {
+  showLoadingRows();
+  const r = await api({ action: 'get' });
+  if (!r || !r.ok) {
+    showToast('ไม่สามารถโหลดข้อมูลได้ กรุณาตรวจสอบ Script URL', true);
+    showEmptyRows(); return;
+  }
+  entries = (r.data || []).map(e => ({
+    id:    String(e.id),
+    name:  String(e.name),
+    date:  String(e.date),
+    start: String(e.start),
+    end:   String(e.end),
+    wage:  Number(e.wage)
+  }));
+  renderRecent();
+  renderSummary();
+}
+
+function showLoadingRows() {
+  document.getElementById('recent-tbody').innerHTML =
+    '<tr class="loading-row"><td colspan="9"><span class="spinner"></span>กำลังโหลด...</td></tr>';
+  document.getElementById('summary-tbody').innerHTML =
+    '<tr class="loading-row"><td colspan="8"><span class="spinner"></span>กำลังโหลด...</td></tr>';
+  document.getElementById('recent-empty').style.display = 'none';
+  document.getElementById('summary-empty').style.display = 'none';
+}
+
+function showEmptyRows() {
+  document.getElementById('recent-tbody').innerHTML = '';
+  document.getElementById('summary-tbody').innerHTML = '';
+}
+
+// ─── CALC ───
+function calcEntry(e) {
+  const [sh,sm] = e.start.split(':').map(Number);
+  const [eh,em] = e.end.split(':').map(Number);
+  const startMin = sh*60+sm, endMin = eh*60+em;
+  const dateObj  = new Date(e.date+'T00:00:00');
+  const dow      = dateObj.getDay();
+  const isWeekend = dow===0||dow===6;
+  const workStart=8*60, workEnd=17*60, lunchStart=12*60, lunchEnd=13*60;
+  function overlap(a,b,c,d){return Math.max(0,Math.min(b,d)-Math.max(a,c));}
+  function deductLunch(from,to){return Math.max(0,(to-from)-overlap(from,to,lunchStart,lunchEnd));}
+  let normalHours=0, otHours=0;
+  if (isWeekend) {
+    otHours = deductLunch(startMin,endMin)/60;
+  } else {
+    const nFrom=Math.max(startMin,workStart), nTo=Math.min(endMin,workEnd);
+    if (nTo>nFrom) normalHours = deductLunch(nFrom,nTo)/60;
+    if (endMin>workEnd) otHours = (endMin-Math.max(startMin,workEnd))/60;
+  }
+  const hourlyRate = e.wage/8;
+  const normalPay  = normalHours*hourlyRate;
+  const otPay      = otHours*hourlyRate*1.5;
+  return { normalHours, otHours, normalPay, otPay, totalPay:normalPay+otPay, isWeekend, dow };
+}
+
+// ─── RENDER ───
+function fmt(n) { return n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtH(h) { return h.toFixed(2); }
+
 function renderRecent() {
   const tbody = document.getElementById('recent-tbody');
   const empty = document.getElementById('recent-empty');
-  if (!entries.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  const sorted = entries.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  if (!sorted.length) { tbody.innerHTML=''; empty.style.display=''; return; }
   empty.style.display = 'none';
-
-  tbody.innerHTML = entries.slice().reverse().slice(0, 50).map((e, ri) => {
-    const i = entries.length - 1 - ri;
+  tbody.innerHTML = sorted.slice(0,50).map(e => {
     const c = calcEntry(e);
-    const typeChip = c.isWeekend
+    const chip = c.isWeekend
       ? '<span class="chip chip-weekend">วันหยุด</span>'
-      : c.otHours > 0
-        ? '<span class="chip chip-ot">มี OT</span>'
-        : '<span class="chip chip-normal">ปกติ</span>';
+      : c.otHours>0 ? '<span class="chip chip-ot">มี OT</span>' : '<span class="chip chip-normal">ปกติ</span>';
     return `<tr>
-      <td class="emp-name">${e.name}</td>
+      <td class="emp-name">${esc(e.name)}</td>
       <td>${e.date}<br><small style="color:var(--muted)">${DAYS_TH[c.dow]}</small></td>
-      <td>${e.start}</td>
-      <td>${e.end}</td>
+      <td>${e.start}</td><td>${e.end}</td>
       <td class="money money-normal">${fmtH(c.normalHours)}</td>
       <td class="money money-ot">${fmtH(c.otHours)}</td>
-      <td>${typeChip}</td>
+      <td>${chip}</td>
       <td class="money money-total">฿${fmt(c.totalPay)}</td>
-      <td>
-        <div class="row-actions">
-          <button class="btn btn-edit" onclick="openEditModal(${i})">✏️ แก้ไข</button>
-          <button class="btn btn-danger" onclick="deleteEntry(${i})">🗑 ลบ</button>
-        </div>
-      </td>
+      <td><div class="row-actions">
+        <button class="btn btn-edit" onclick="openEditModal('${e.id}')">✏️ แก้ไข</button>
+        <button class="btn btn-danger" onclick="deleteEntry('${e.id}')">🗑 ลบ</button>
+      </div></td>
     </tr>`;
   }).join('');
 }
 
-// ─── RENDER SUMMARY ───
 function renderSummary() {
   const tbody = document.getElementById('summary-tbody');
   const empty = document.getElementById('summary-empty');
   const map = {};
   entries.forEach(e => {
-    if (!map[e.name]) map[e.name] = { wage: e.wage, records: [] };
-    map[e.name].records.push(e);
-    map[e.name].wage = e.wage;
+    if (!map[e.name]) map[e.name]={wage:e.wage, records:[]};
+    map[e.name].records.push(e); map[e.name].wage=e.wage;
   });
   const names = Object.keys(map);
   document.getElementById('s-emp').textContent = names.length;
   document.getElementById('s-records').textContent = entries.length;
-  let totalHours = 0, grandTotal = 0;
-  if (!names.length) {
-    tbody.innerHTML = ''; empty.style.display = '';
-    document.getElementById('s-hours').textContent = '0';
-    document.getElementById('s-total').textContent = '฿0';
-    return;
-  }
-  empty.style.display = 'none';
+  let tH=0, tPay=0;
+  if (!names.length) { tbody.innerHTML=''; empty.style.display='';
+    document.getElementById('s-hours').textContent='0';
+    document.getElementById('s-total').textContent='฿0'; return; }
+  empty.style.display='none';
   tbody.innerHTML = names.map(name => {
-    const g = map[name];
-    let nh=0, oh=0, np=0, op=0;
-    g.records.forEach(e => { const c=calcEntry(e); nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay; });
-    const total = np + op;
-    totalHours += nh + oh; grandTotal += total;
+    const g=map[name]; let nh=0,oh=0,np=0,op=0;
+    g.records.forEach(e=>{const c=calcEntry(e);nh+=c.normalHours;oh+=c.otHours;np+=c.normalPay;op+=c.otPay;});
+    const total=np+op; tH+=nh+oh; tPay+=total;
     return `<tr>
-      <td class="emp-name">${name}</td>
+      <td class="emp-name">${esc(name)}</td>
       <td>${g.records.length} วัน</td>
       <td class="money money-normal">${fmtH(nh)} ชม.</td>
       <td class="money money-ot">${fmtH(oh)} ชม.</td>
       <td class="money money-normal">฿${fmt(np)}</td>
       <td class="money money-ot">฿${fmt(op)}</td>
       <td class="money money-total">฿${fmt(total)}</td>
-      <td><button class="btn-view" onclick="openModal('${name.replace(/'/g,"\\'")}')">ดูรายละเอียด ▸</button></td>
+      <td><button class="btn-view" onclick="openModal('${esc(name)}')">ดูรายละเอียด ▸</button></td>
     </tr>`;
   }).join('');
-  document.getElementById('s-hours').textContent = fmtH(totalHours);
-  document.getElementById('s-total').textContent = '฿' + fmt(grandTotal);
+  document.getElementById('s-hours').textContent = fmtH(tH);
+  document.getElementById('s-total').textContent = '฿'+fmt(tPay);
 }
 
-// ─── EMPLOYEE DETAIL MODAL ───
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── MODAL DETAIL ───
 function openModal(name) {
-  const records = entries.filter(e => e.name === name);
+  const records = entries.filter(e=>e.name===name);
   document.getElementById('modal-name').textContent = name;
   document.getElementById('modal-avatar').textContent = name.charAt(0).toUpperCase();
   document.getElementById('modal-sub').textContent = `${records.length} รายการทำงาน`;
-  let nh=0, oh=0, np=0, op=0;
-  const rows = records.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e => {
-    const c = calcEntry(e);
-    nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay;
-    const typeChip = c.isWeekend
-      ? '<span class="chip chip-weekend">วันหยุด ×1.5</span>'
-      : c.otHours > 0 ? '<span class="chip chip-ot">มี OT</span>' : '<span class="chip chip-normal">ปกติ</span>';
-    return `<tr>
-      <td>${e.date}</td><td>${DAYS_TH[c.dow]}</td>
-      <td>${e.start}</td><td>${e.end}</td>
+  let nh=0,oh=0,np=0,op=0;
+  const rows=records.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>{
+    const c=calcEntry(e); nh+=c.normalHours;oh+=c.otHours;np+=c.normalPay;op+=c.otPay;
+    const chip=c.isWeekend?'<span class="chip chip-weekend">วันหยุด ×1.5</span>':
+      c.otHours>0?'<span class="chip chip-ot">มี OT</span>':'<span class="chip chip-normal">ปกติ</span>';
+    return `<tr><td>${e.date}</td><td>${DAYS_TH[c.dow]}</td><td>${e.start}</td><td>${e.end}</td>
       <td class="money money-normal">${fmtH(c.normalHours)}</td>
-      <td class="money money-ot">${fmtH(c.otHours)}</td>
-      <td>${typeChip}</td>
-      <td class="money money-total">฿${fmt(c.totalPay)}</td>
-    </tr>`;
+      <td class="money money-ot">${fmtH(c.otHours)}</td><td>${chip}</td>
+      <td class="money money-total">฿${fmt(c.totalPay)}</td></tr>`;
   });
-  document.getElementById('modal-normal-h').textContent = fmtH(nh) + ' ชม.';
-  document.getElementById('modal-ot-h').textContent = fmtH(oh) + ' ชม.';
-  document.getElementById('modal-total-pay').textContent = '฿' + fmt(np+op);
+  document.getElementById('modal-normal-h').textContent = fmtH(nh)+' ชม.';
+  document.getElementById('modal-ot-h').textContent = fmtH(oh)+' ชม.';
+  document.getElementById('modal-total-pay').textContent = '฿'+fmt(np+op);
   document.getElementById('modal-tbody').innerHTML = rows.join('');
   document.getElementById('emp-modal').classList.add('open');
 }
 
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if(e.target===el && el.id!=='pin-overlay') closeModal(el.id); });
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el&&el.id!=='pin-overlay') closeModal(el.id); });
 });
 
-// ─── EDIT MODAL ───
-function openEditModal(i) {
-  const e = entries[i];
-  editingIndex = i;
+// ─── EDIT ───
+function openEditModal(id) {
+  const e = entries.find(x=>x.id===id); if(!e)return;
+  editingId=id;
   document.getElementById('edit-name').value  = e.name;
   document.getElementById('edit-date').value  = e.date;
   document.getElementById('edit-start').value = e.start;
@@ -701,251 +760,185 @@ function openEditModal(i) {
   document.getElementById('edit-modal').classList.add('open');
 }
 
-function confirmEdit() {
+async function confirmEdit() {
   const name  = document.getElementById('edit-name').value.trim();
   const date  = document.getElementById('edit-date').value;
   const start = document.getElementById('edit-start').value;
   const end   = document.getElementById('edit-end').value;
   const wage  = parseFloat(document.getElementById('edit-wage').value);
-  if (!name)  { showToast('กรุณากรอกชื่อ-สกุล', true); return; }
-  if (!date)  { showToast('กรุณาเลือกวันที่', true); return; }
-  if (start >= end) { showToast('เวลาออกต้องมากกว่าเวลาเข้า', true); return; }
-  if (isNaN(wage)||wage<=0) { showToast('กรุณากรอกค่าแรงต่อวัน', true); return; }
-  entries[editingIndex] = { name, date, start, end, wage };
-  save(); renderRecent(); renderSummary();
+  if(!name||!date||start>=end||isNaN(wage)||wage<=0){showToast('กรุณากรอกข้อมูลให้ครบถ้วน',true);return;}
+  const btn = document.querySelector('#edit-modal .btn-primary');
+  btn.disabled=true; btn.textContent='⏳ กำลังบันทึก...';
+  const r = await api({action:'update'},{action:'update',id:editingId,name,date,start,end,wage});
+  btn.disabled=false; btn.textContent='💾 บันทึกการแก้ไข';
+  if(!r||!r.ok){showToast('บันทึกไม่สำเร็จ กรุณาลองใหม่',true);return;}
   closeModal('edit-modal');
   showToast('แก้ไขข้อมูลสำเร็จ');
+  await loadEntries();
 }
 
-// ─── ADD / DELETE ───
-function saveEntry() {
+// ─── ADD ───
+async function saveEntry() {
   const name  = document.getElementById('inp-name').value.trim();
   const date  = document.getElementById('inp-date').value;
   const start = document.getElementById('inp-start').value;
   const end   = document.getElementById('inp-end').value;
   const wage  = parseFloat(document.getElementById('inp-wage').value);
-  if (!name)  { showToast('กรุณากรอกชื่อ-สกุล', true); return; }
-  if (!date)  { showToast('กรุณาเลือกวันที่', true); return; }
-  if (!start||!end) { showToast('กรุณากรอกเวลา', true); return; }
-  if (isNaN(wage)||wage<=0) { showToast('กรุณากรอกค่าแรงต่อวัน', true); return; }
-  if (start >= end) { showToast('เวลาออกต้องมากกว่าเวลาเข้า', true); return; }
-  entries.push({ name, date, start, end, wage });
-  save(); renderRecent(); renderSummary();
+  if(!name){showToast('กรุณากรอกชื่อ-สกุล',true);return;}
+  if(!date){showToast('กรุณาเลือกวันที่',true);return;}
+  if(!start||!end){showToast('กรุณากรอกเวลา',true);return;}
+  if(isNaN(wage)||wage<=0){showToast('กรุณากรอกค่าแรงต่อวัน',true);return;}
+  if(start>=end){showToast('เวลาออกต้องมากกว่าเวลาเข้า',true);return;}
+  if(!getScriptUrl()){showToast('กรุณาตั้งค่า Script URL ก่อน',true);document.getElementById('setup-banner').classList.add('show');return;}
+  const btn = document.getElementById('save-btn');
+  btn.disabled=true; btn.textContent='⏳ กำลังบันทึก...';
+  const r = await api({action:'add'},{action:'add',name,date,start,end,wage});
+  btn.disabled=false; btn.textContent='✚ บันทึกเวลาทำงาน';
+  if(!r||!r.ok){showToast('บันทึกไม่สำเร็จ กรุณาลองใหม่',true);return;}
   showToast(`บันทึกเวลาทำงานของ ${name} สำเร็จ`);
   clearForm();
+  await loadEntries();
 }
 
-function deleteEntry(i) {
-  if (!confirm('ยืนยันการลบรายการนี้?')) return;
-  entries.splice(i, 1);
-  save(); renderRecent(); renderSummary();
+// ─── DELETE ───
+async function deleteEntry(id) {
+  if(!confirm('ยืนยันการลบรายการนี้?'))return;
+  const r = await api({action:'delete'},{action:'delete',id});
+  if(!r||!r.ok){showToast('ลบไม่สำเร็จ',true);return;}
   showToast('ลบรายการแล้ว');
+  await loadEntries();
 }
 
-function clearForm() {
-  document.getElementById('inp-name').value = '';
-  document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('inp-start').value = '08:00';
-  document.getElementById('inp-end').value = '17:00';
-  document.getElementById('inp-wage').value = '';
+function clearForm(){
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('inp-start').value='08:00';
+  document.getElementById('inp-end').value='17:00';
+  document.getElementById('inp-wage').value='';
 }
+function cancelEdit(){ editingId=null; clearForm(); }
 
-function cancelEdit() {
-  editingIndex = null;
-  document.getElementById('form-title').textContent = 'กรอกข้อมูลเวลาทำงาน';
-  document.getElementById('save-btn').textContent = '✚ บันทึกเวลาทำงาน';
-  document.getElementById('cancel-btn').style.display = 'none';
-  clearForm();
-}
-
-// ─── TAB SWITCH WITH PIN LOCK ───
-function switchTab(tab) {
-  if (tab === 'summary' && !summaryUnlocked) {
-    openPinOverlay();
-    return;
-  }
+// ─── TAB + PIN ───
+function switchTab(tab){
+  if(tab==='summary'&&!summaryUnlocked){openPinOverlay();return;}
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0)===(tab==='entry')));
-  document.getElementById('page-entry').classList.toggle('active', tab==='entry');
-  document.getElementById('page-summary').classList.toggle('active', tab==='summary');
+  document.getElementById('page-entry').classList.toggle('active',tab==='entry');
+  document.getElementById('page-summary').classList.toggle('active',tab==='summary');
 }
-
-// ─── PIN LOGIC ───
-function openPinOverlay() {
-  pinBuffer = '';
-  updateDots();
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('pin-overlay').classList.add('open');
-}
-
-function pinInput(digit) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += digit;
-  updateDots();
-  if (pinBuffer.length === 4) {
-    setTimeout(checkPin, 150);
-  }
-}
-
-function pinDelete() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updateDots();
-}
-
-function updateDots(state) {
-  for (let i=0; i<4; i++) {
-    const d = document.getElementById('dot-'+i);
-    d.classList.toggle('filled', i < pinBuffer.length && state !== 'error');
-    d.classList.toggle('error', state === 'error');
-  }
-}
-
-function checkPin() {
-  if (pinBuffer === getPin()) {
-    summaryUnlocked = true;
+function getPin(){return localStorage.getItem(PIN_KEY)||DEFAULT_PIN;}
+function openPinOverlay(){pinBuffer='';updateDots();document.getElementById('pin-error').textContent='';document.getElementById('pin-overlay').classList.add('open');}
+function pinInput(d){if(pinBuffer.length>=4)return;pinBuffer+=d;updateDots();if(pinBuffer.length===4)setTimeout(checkPin,150);}
+function pinDelete(){pinBuffer=pinBuffer.slice(0,-1);updateDots();}
+function updateDots(state){for(let i=0;i<4;i++){const d=document.getElementById('dot-'+i);d.classList.toggle('filled',i<pinBuffer.length&&state!=='error');d.classList.toggle('error',state==='error');}}
+function checkPin(){
+  if(pinBuffer===getPin()){
+    summaryUnlocked=true;
     document.getElementById('pin-overlay').classList.remove('open');
-    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i===1));
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===1));
     document.getElementById('page-entry').classList.remove('active');
     document.getElementById('page-summary').classList.add('active');
   } else {
     updateDots('error');
-    document.getElementById('pin-error').textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
-    setTimeout(() => {
-      pinBuffer = '';
-      updateDots();
-      document.getElementById('pin-error').textContent = '';
-    }, 1200);
+    document.getElementById('pin-error').textContent='รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
+    setTimeout(()=>{pinBuffer='';updateDots();document.getElementById('pin-error').textContent='';},1200);
   }
 }
-
-// ─── CHANGE PIN ───
-function openChangePinModal() {
-  document.getElementById('new-pin').value = '';
-  document.getElementById('confirm-pin').value = '';
-  document.getElementById('change-pin-modal').classList.add('open');
-}
-
-function saveNewPin() {
-  const np = document.getElementById('new-pin').value.trim();
-  const cp = document.getElementById('confirm-pin').value.trim();
-  if (!/^\d{4}$/.test(np)) { showToast('รหัสผ่านต้องเป็นตัวเลข 4 หลักเท่านั้น', true); return; }
-  if (np !== cp) { showToast('รหัสผ่านยืนยันไม่ตรงกัน', true); return; }
-  localStorage.setItem('tt_pin', np);
+function openChangePinModal(){document.getElementById('new-pin').value='';document.getElementById('confirm-pin').value='';document.getElementById('change-pin-modal').classList.add('open');}
+function saveNewPin(){
+  const np=document.getElementById('new-pin').value.trim();
+  const cp=document.getElementById('confirm-pin').value.trim();
+  if(!/^\d{4}$/.test(np)){showToast('รหัสผ่านต้องเป็นตัวเลข 4 หลัก',true);return;}
+  if(np!==cp){showToast('รหัสผ่านยืนยันไม่ตรงกัน',true);return;}
+  localStorage.setItem(PIN_KEY,np);
   closeModal('change-pin-modal');
   showToast('เปลี่ยนรหัสผ่านสำเร็จ');
 }
 
-// ─── TOAST ───
-function showToast(msg, isErr) {
-  const t = document.getElementById('toast');
-  document.getElementById('toast-msg').textContent = msg;
-  t.style.borderColor = isErr ? 'var(--red)' : 'var(--green)';
-  t.style.color = isErr ? 'var(--red)' : 'var(--green)';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+// ─── GUIDE ───
+function showGuide(){document.getElementById('guide-modal').classList.add('open');}
+function copyCode(){
+  const code=document.getElementById('gas-code').textContent;
+  navigator.clipboard.writeText(code).then(()=>showToast('คัดลอกโค้ดแล้ว ✓')).catch(()=>showToast('ไม่สามารถคัดลอกได้',true));
 }
 
 // ─── EXPORT EXCEL ───
-function exportExcel() {
-  if (!entries.length) { showToast('ไม่มีข้อมูลสำหรับ Export', true); return; }
-
-  const wb = XLSX.utils.book_new();
-
-  // ── Sheet 1: สรุปรายบุคคล ──
-  const map = {};
-  entries.forEach(e => {
-    if (!map[e.name]) map[e.name] = { wage: e.wage, records: [] };
-    map[e.name].records.push(e);
-    map[e.name].wage = e.wage;
+function exportExcel(){
+  if(!entries.length){showToast('ไม่มีข้อมูลสำหรับ Export',true);return;}
+  const wb=XLSX.utils.book_new();
+  const map={};
+  entries.forEach(e=>{
+    if(!map[e.name])map[e.name]={wage:e.wage,records:[]};
+    map[e.name].records.push(e);map[e.name].wage=e.wage;
   });
-
-  const summaryRows = [
-    ['ชื่อ-สกุล', 'จำนวนวันทำงาน', 'ชม.ปกติ (×1)', 'ชม.OT (×1.5)', 'ค่าแรงปกติ (บาท)', 'ค่า OT (บาท)', 'รวมค่าแรง (บาท)']
-  ];
-  let totalNH=0, totalOH=0, totalNP=0, totalOP=0;
-  Object.keys(map).forEach(name => {
-    const g = map[name];
+  // Sheet 1: Summary
+  const sumRows=[['ชื่อ-สกุล','จำนวนวันทำงาน','ชม.ปกติ (×1)','ชม.OT (×1.5)','ค่าแรงปกติ (บาท)','ค่า OT (บาท)','รวมค่าแรง (บาท)']];
+  let tNH=0,tOH=0,tNP=0,tOP=0;
+  Object.keys(map).forEach(name=>{
+    const g=map[name];let nh=0,oh=0,np=0,op=0;
+    g.records.forEach(e=>{const c=calcEntry(e);nh+=c.normalHours;oh+=c.otHours;np+=c.normalPay;op+=c.otPay;});
+    sumRows.push([name,g.records.length,+nh.toFixed(2),+oh.toFixed(2),+np.toFixed(2),+op.toFixed(2),+(np+op).toFixed(2)]);
+    tNH+=nh;tOH+=oh;tNP+=np;tOP+=op;
+  });
+  sumRows.push(['รวมทั้งหมด',entries.length,+tNH.toFixed(2),+tOH.toFixed(2),+tNP.toFixed(2),+tOP.toFixed(2),+(tNP+tOP).toFixed(2)]);
+  const ws1=XLSX.utils.aoa_to_sheet(sumRows);
+  ws1['!cols']=[28,18,16,16,20,16,20].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws1,'สรุปรายบุคคล');
+  // Sheet 2: All records
+  const detRows=[['ชื่อ-สกุล','วันที่','วัน','เวลาเข้า','เวลาออก','ชม.ปกติ','ชม.OT','ประเภท','ค่าแรงต่อวัน','ค่าแรงปกติ','ค่า OT','รวม']];
+  entries.slice().sort((a,b)=>a.name.localeCompare(b.name,'th')||a.date.localeCompare(b.date)).forEach(e=>{
+    const c=calcEntry(e);
+    const t=c.isWeekend?'วันหยุด (×1.5)':c.otHours>0?'มี OT':'ปกติ';
+    detRows.push([e.name,e.date,DAYS_TH[c.dow],e.start,e.end,+c.normalHours.toFixed(2),+c.otHours.toFixed(2),t,+e.wage,+c.normalPay.toFixed(2),+c.otPay.toFixed(2),+c.totalPay.toFixed(2)]);
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(detRows);
+  ws2['!cols']=[28,12,10,10,10,12,10,16,16,16,12,14].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws2,'รายการทั้งหมด');
+  // Sheet per employee
+  Object.keys(map).forEach(name=>{
+    const g=map[name];
+    const rows=[['รายการทำงาน: '+name],[],['วันที่','วัน','เวลาเข้า','เวลาออก','ชม.ปกติ','ชม.OT','ประเภท','ค่าแรงต่อวัน','ค่าแรงปกติ','ค่า OT','รวม']];
     let nh=0,oh=0,np=0,op=0;
-    g.records.forEach(e => { const c=calcEntry(e); nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay; });
-    summaryRows.push([name, g.records.length, +nh.toFixed(2), +oh.toFixed(2), +np.toFixed(2), +op.toFixed(2), +(np+op).toFixed(2)]);
-    totalNH+=nh; totalOH+=oh; totalNP+=np; totalOP+=op;
-  });
-  summaryRows.push(['รวมทั้งหมด', entries.length, +totalNH.toFixed(2), +totalOH.toFixed(2), +totalNP.toFixed(2), +totalOP.toFixed(2), +(totalNP+totalOP).toFixed(2)]);
-
-  const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
-
-  // Column widths sheet1
-  ws1['!cols'] = [28,18,16,16,20,16,20].map(w=>({wch:w}));
-
-  // Style header row (bold via special cell range)
-  const hdrRange = XLSX.utils.decode_range(ws1['!ref']);
-  // Mark header row and total row
-  summaryRows[0].forEach((_, ci) => {
-    const cellAddr = XLSX.utils.encode_cell({r:0, c:ci});
-    if (!ws1[cellAddr]) return;
-    ws1[cellAddr].s = { font:{bold:true}, fill:{fgColor:{rgb:'4C1D95'}}, alignment:{horizontal:'center'} };
-  });
-  const lastRow = summaryRows.length - 1;
-  summaryRows[summaryRows.length-1].forEach((_, ci) => {
-    const cellAddr = XLSX.utils.encode_cell({r:lastRow, c:ci});
-    if (!ws1[cellAddr]) return;
-    ws1[cellAddr].s = { font:{bold:true}, fill:{fgColor:{rgb:'1E1838'}} };
-  });
-
-  XLSX.utils.book_append_sheet(wb, ws1, 'สรุปรายบุคคล');
-
-  // ── Sheet 2: รายการทั้งหมด ──
-  const detailRows = [
-    ['ชื่อ-สกุล', 'วันที่', 'วัน', 'เวลาเข้า', 'เวลาออก', 'ชม.ปกติ', 'ชม.OT', 'ประเภท', 'ค่าแรงต่อวัน (บาท)', 'ค่าแรงปกติ (บาท)', 'ค่า OT (บาท)', 'รวม (บาท)']
-  ];
-  entries.slice().sort((a,b)=>a.name.localeCompare(b.name,'th')||a.date.localeCompare(b.date)).forEach(e => {
-    const c = calcEntry(e);
-    const typeLabel = c.isWeekend ? 'วันหยุด (×1.5)' : c.otHours > 0 ? 'มี OT' : 'ปกติ';
-    detailRows.push([
-      e.name, e.date, DAYS_TH[c.dow], e.start, e.end,
-      +c.normalHours.toFixed(2), +c.otHours.toFixed(2),
-      typeLabel, +e.wage, +c.normalPay.toFixed(2), +c.otPay.toFixed(2), +c.totalPay.toFixed(2)
-    ]);
-  });
-
-  const ws2 = XLSX.utils.aoa_to_sheet(detailRows);
-  ws2['!cols'] = [28,12,10,10,10,12,10,16,20,20,16,16].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, ws2, 'รายการทั้งหมด');
-
-  // ── Sheet 3: สรุปแยกรายบุคคล (แต่ละคนมีรายการ) ──
-  Object.keys(map).forEach(name => {
-    const g = map[name];
-    const rows = [
-      [`รายการทำงาน: ${name}`],
-      [],
-      ['วันที่', 'วัน', 'เวลาเข้า', 'เวลาออก', 'ชม.ปกติ', 'ชม.OT', 'ประเภท', 'ค่าแรงต่อวัน', 'ค่าแรงปกติ', 'ค่า OT', 'รวม']
-    ];
-    let nh=0, oh=0, np=0, op=0;
-    g.records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(e => {
-      const c = calcEntry(e);
-      nh+=c.normalHours; oh+=c.otHours; np+=c.normalPay; op+=c.otPay;
-      const typeLabel = c.isWeekend ? 'วันหยุด (×1.5)' : c.otHours > 0 ? 'มี OT' : 'ปกติ';
-      rows.push([e.date, DAYS_TH[c.dow], e.start, e.end, +c.normalHours.toFixed(2), +c.otHours.toFixed(2), typeLabel, +e.wage, +c.normalPay.toFixed(2), +c.otPay.toFixed(2), +c.totalPay.toFixed(2)]);
+    g.records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+      const c=calcEntry(e);nh+=c.normalHours;oh+=c.otHours;np+=c.normalPay;op+=c.otPay;
+      const t=c.isWeekend?'วันหยุด (×1.5)':c.otHours>0?'มี OT':'ปกติ';
+      rows.push([e.date,DAYS_TH[c.dow],e.start,e.end,+c.normalHours.toFixed(2),+c.otHours.toFixed(2),t,+e.wage,+c.normalPay.toFixed(2),+c.otPay.toFixed(2),+c.totalPay.toFixed(2)]);
     });
-    rows.push([]);
-    rows.push(['รวม', '', '', '', +nh.toFixed(2), +oh.toFixed(2), '', '', +np.toFixed(2), +op.toFixed(2), +(np+op).toFixed(2)]);
-
-    const sheetName = name.replace(/[:\\/\?\*\[\]]/g,'').substring(0, 28);
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [12,10,10,10,12,10,16,16,16,12,14].map(w=>({wch:w}));
-    try { XLSX.utils.book_append_sheet(wb, ws, sheetName); } catch(e) {}
+    rows.push([],['รวม','','','',+nh.toFixed(2),+oh.toFixed(2),'','',+np.toFixed(2),+op.toFixed(2),+(np+op).toFixed(2)]);
+    const sn=name.replace(/[:\\/\?\*\[\]]/g,'').substring(0,28);
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[12,10,10,10,12,10,16,14,16,12,14].map(w=>({wch:w}));
+    try{XLSX.utils.book_append_sheet(wb,ws,sn);}catch(e){}
   });
-
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-  XLSX.writeFile(wb, `สรุปค่าแรง_${dateStr}.xlsx`);
+  const d=new Date();
+  const ds=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb,`สรุปค่าแรง_${ds}.xlsx`);
   showToast('Export Excel สำเร็จ ✓');
+}
+
+// ─── TOAST ───
+function showToast(msg,isErr){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.style.borderColor=isErr?'var(--red)':'var(--green)';
+  t.style.color=isErr?'var(--red)':'var(--green)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
 }
 
 // ─── INIT ───
 document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
-renderRecent();
-renderSummary();
+const savedUrl = getScriptUrl();
+if (savedUrl) {
+  document.getElementById('script-url-input').value = savedUrl;
+  document.getElementById('setup-banner').classList.remove('show');
+  loadEntries();
+} else {
+  setConn('offline');
+  document.getElementById('recent-tbody').innerHTML = '';
+  document.getElementById('recent-empty').style.display = '';
+  document.getElementById('summary-tbody').innerHTML = '';
+  document.getElementById('summary-empty').style.display = '';
+}
 </script>
 </body>
 </html>
-
